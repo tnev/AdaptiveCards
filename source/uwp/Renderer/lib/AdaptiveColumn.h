@@ -30,6 +30,9 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
 
         IFACEMETHODIMP get_Items(_COM_Outptr_ ABI::Windows::Foundation::Collections::IVector<ABI::AdaptiveCards::Rendering::Uwp::IAdaptiveCardElement*>** items);
 
+        IFACEMETHODIMP get_SelectAction(_COM_Outptr_ ABI::AdaptiveCards::Rendering::Uwp::IAdaptiveActionElement** action);
+        IFACEMETHODIMP put_SelectAction(_In_ ABI::AdaptiveCards::Rendering::Uwp::IAdaptiveActionElement* action);
+
         // IAdaptiveCardElement
         IFACEMETHODIMP get_ElementType(_Out_ ABI::AdaptiveCards::Rendering::Uwp::ElementType* elementType);
 
@@ -44,6 +47,9 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
 
         IFACEMETHODIMP get_ElementTypeString(_Out_ HSTRING* value);
 
+        IFACEMETHODIMP get_AdditionalProperties(_Out_ ABI::Windows::Data::Json::IJsonObject** result);
+        IFACEMETHODIMP put_AdditionalProperties(_In_ ABI::Windows::Data::Json::IJsonObject* value);
+
         IFACEMETHODIMP ToJson(_Out_ ABI::Windows::Data::Json::IJsonObject** result);
 
         HRESULT GetSharedModel(_In_ std::shared_ptr<AdaptiveCards::Column>& sharedModel);
@@ -57,6 +63,7 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
     private:
 
         Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Collections::IVector<ABI::AdaptiveCards::Rendering::Uwp::IAdaptiveCardElement*>> m_items; 
+        Microsoft::WRL::ComPtr<ABI::AdaptiveCards::Rendering::Uwp::IAdaptiveActionElement> m_selectAction;
 
         Microsoft::WRL::Wrappers::HString m_width; 
         ABI::AdaptiveCards::Rendering::Uwp::ContainerStyle m_style;
@@ -64,6 +71,7 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
         boolean m_separator;
         Microsoft::WRL::Wrappers::HString m_id;
         ABI::AdaptiveCards::Rendering::Uwp::Spacing m_spacing;
+        Microsoft::WRL::ComPtr<ABI::Windows::Data::Json::IJsonObject> m_additionalProperties;
     };
 
     ActivatableClass(AdaptiveColumn);

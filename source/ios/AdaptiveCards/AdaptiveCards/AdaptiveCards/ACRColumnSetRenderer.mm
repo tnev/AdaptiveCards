@@ -23,9 +23,9 @@
     return singletonInstance;
 }
 
-+ (CardElementType)elemType
++ (ACRCardElementType)elemType
 {
-    return CardElementType::ColumnSet;
+    return ACRColumnSet;
 }
 
 - (UIView* )render:(UIView<ACRIContentHoldingView> *)viewGroup
@@ -107,7 +107,7 @@
                                                                  targetView:columnSetView
                                                               actionElement:selectAction
                                                                      inputs:inputs
-                                                                 hostConfig:config];
+                                                                 hostConfig:acoConfig];
     if(gestureRecognizer)
     {
         [columnSetView addGestureRecognizer:gestureRecognizer];

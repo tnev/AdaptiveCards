@@ -21,7 +21,7 @@
 #include "AdaptiveToggleInputRenderer.h"
 #include "AsyncOperations.h"
 #include "DefaultResourceDictionary.h"
-#include "InputItem.h"
+#include "InputValue.h"
 #include "RenderedAdaptiveCard.h"
 #include "XamlHelpers.h"
 #include <windows.foundation.collections.h>
@@ -111,7 +111,7 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
 
         if (adaptiveCard)
         {
-            ComPtr<IUIElement> xamlTreeRoot;
+            ComPtr<IFrameworkElement> xamlTreeRoot;
 
             if (m_explicitDimensions)
             {

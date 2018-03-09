@@ -4,7 +4,7 @@
 #include <string>
 
 #include "AdaptiveCards.Rendering.Uwp.h"
-#include "InputItem.h"
+#include "InputValue.h"
 #include <BaseCardElement.h>
 #include <BaseActionElement.h>
 #include <ChoiceInput.h>
@@ -12,6 +12,11 @@
 #include <Fact.h>
 #include <Image.h>
 #include <windows.foundation.collections.h>
+
+HRESULT WStringToHString(const std::wstring& in, HSTRING* out);
+
+std::string WstringToString(const std::wstring& in);
+std::wstring StringToWstring(const std::string& in);
 
 // This function is needed to deal with the fact that non-windows platforms handle Unicode without the need for wchar_t.
 // (which has a platform specific implementation) It converts a std::string to an HSTRING.

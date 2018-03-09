@@ -25,6 +25,9 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
 
         // IAdaptiveChoiceSetInput
 
+        IFACEMETHODIMP get_Value(_Out_ HSTRING* value);
+        IFACEMETHODIMP put_Value(_In_ HSTRING value);
+
         IFACEMETHODIMP get_IsMultiSelect(_Out_ boolean* isMultiSelect);
         IFACEMETHODIMP put_IsMultiSelect(_In_ boolean isMultiSelect);
 
@@ -53,6 +56,9 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
 
         IFACEMETHODIMP ToJson(_Out_ ABI::Windows::Data::Json::IJsonObject** result);
 
+        IFACEMETHODIMP get_AdditionalProperties(_Out_ ABI::Windows::Data::Json::IJsonObject** result);
+        IFACEMETHODIMP put_AdditionalProperties(_In_ ABI::Windows::Data::Json::IJsonObject* value);
+
         HRESULT GetSharedModel(_In_ std::shared_ptr<AdaptiveCards::ChoiceSetInput>& sharedModel);
 
         // ITypePeek method
@@ -66,10 +72,12 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
         boolean m_isRequired;
         boolean m_isMultiSelect;
         ABI::AdaptiveCards::Rendering::Uwp::ChoiceSetStyle m_choiceSetStyle;
+        Microsoft::WRL::Wrappers::HString m_value;
 
         boolean m_separator;
         Microsoft::WRL::Wrappers::HString m_id;
         ABI::AdaptiveCards::Rendering::Uwp::Spacing m_spacing;
+        Microsoft::WRL::ComPtr<ABI::Windows::Data::Json::IJsonObject> m_additionalProperties;
     };
 
     ActivatableClass(AdaptiveChoiceSetInput);

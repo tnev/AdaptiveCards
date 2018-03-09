@@ -22,9 +22,9 @@
     return singletonInstance;
 }
 
-+ (CardElementType)elemType
++ (ACRCardElementType)elemType
 {
-    return CardElementType::Column;
+    return ACRColumn;
 }
 
 - (UIView *)render:(UIView<ACRIContentHoldingView> *)viewGroup
@@ -33,18 +33,16 @@
    baseCardElement:(ACOBaseCardElement *)acoElem
         hostConfig:(ACOHostConfig *)acoConfig;
 {
-
-    std::shared_ptr<HostConfig> config = [acoConfig getHostConfig];
     std::shared_ptr<BaseCardElement> elem = [acoElem element];
     std::shared_ptr<Column> columnElem = std::dynamic_pointer_cast<Column>(elem);
 
-    ACRColumnView* column = [[ACRColumnView alloc] initWithStyle:columnElem->GetStyle()
-                                                     parentStyle:[viewGroup style] hostConfig:config];
+    ACRColumnView* column = [[ACRColumnView alloc] initWithStyle:(ACRContainerStyle)columnElem->GetStyle()
+                                                     parentStyle:[viewGroup style] hostConfig:acoConfig];
     [ACRRenderer render:column
      rootViewController:vc
                  inputs:inputs
           withCardElems:columnElem->GetItems()
-          andHostConfig:config];
+          andHostConfig:acoConfig];
 
     [viewGroup addArrangedSubview:column];
 
@@ -65,7 +63,7 @@
                                                                  targetView:column
                                                               actionElement:selectAction
                                                                      inputs:inputs
-                                                                 hostConfig:config];
+                                                                 hostConfig:acoConfig];
     if(gestureRecognizer)
     {
         [column addGestureRecognizer:gestureRecognizer];

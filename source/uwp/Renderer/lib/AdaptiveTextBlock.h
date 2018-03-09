@@ -6,7 +6,7 @@
 
 namespace AdaptiveCards { namespace Rendering { namespace Uwp
 {
-    class DECLSPEC_UUID("743555b2-f4fc-486f-9024-f77de55aef26") AdaptiveTextBlock :
+    class DECLSPEC_UUID("0c87566c-a58c-4332-8b3b-79c9714074f6") AdaptiveTextBlock :
         public Microsoft::WRL::RuntimeClass<
             Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::WinRtClassicComMix>,
             ABI::AdaptiveCards::Rendering::Uwp::IAdaptiveTextBlock,
@@ -44,6 +44,9 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
         IFACEMETHODIMP get_HorizontalAlignment(_Out_ ABI::AdaptiveCards::Rendering::Uwp::HAlignment* hAlignment);
         IFACEMETHODIMP put_HorizontalAlignment(_In_ ABI::AdaptiveCards::Rendering::Uwp::HAlignment hAlignment);
 
+        IFACEMETHODIMP get_Language(_Out_ HSTRING *language);
+        IFACEMETHODIMP put_Language(_In_ HSTRING language);
+
         // IAdaptiveCardElement
         IFACEMETHODIMP get_ElementType(_Out_ ABI::AdaptiveCards::Rendering::Uwp::ElementType* elementType);
 
@@ -58,6 +61,9 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
 
         IFACEMETHODIMP get_ElementTypeString(_Out_ HSTRING* value);
 
+        IFACEMETHODIMP get_AdditionalProperties(_Out_ ABI::Windows::Data::Json::IJsonObject** result);
+        IFACEMETHODIMP put_AdditionalProperties(_In_ ABI::Windows::Data::Json::IJsonObject* value);
+
         IFACEMETHODIMP ToJson(_Out_ ABI::Windows::Data::Json::IJsonObject** result);
 
         HRESULT GetSharedModel(_In_ std::shared_ptr<AdaptiveCards::TextBlock>& sharedModel);
@@ -69,7 +75,21 @@ namespace AdaptiveCards { namespace Rendering { namespace Uwp
         }
 
     private:
-        std::shared_ptr<AdaptiveCards::TextBlock> m_sharedTextBlock;
+        boolean m_wrap;
+        boolean m_subtle;
+        UINT32 m_maxLines;
+        Microsoft::WRL::Wrappers::HString m_text;
+        Microsoft::WRL::Wrappers::HString m_language;
+        ABI::AdaptiveCards::Rendering::Uwp::TextSize m_textSize;
+        ABI::AdaptiveCards::Rendering::Uwp::TextWeight m_textWeight;
+        ABI::AdaptiveCards::Rendering::Uwp::ForegroundColor m_foregroundColor;
+        ABI::AdaptiveCards::Rendering::Uwp::HAlignment m_horizontalAlignment;
+
+        boolean m_isRequired;
+        boolean m_separator;
+        Microsoft::WRL::Wrappers::HString m_id;
+        ABI::AdaptiveCards::Rendering::Uwp::Spacing m_spacing;
+        Microsoft::WRL::ComPtr<ABI::Windows::Data::Json::IJsonObject> m_additionalProperties;
     };
 
     ActivatableClass(AdaptiveTextBlock);
