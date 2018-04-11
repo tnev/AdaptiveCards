@@ -1,17 +1,16 @@
 #pragma once
 
-#include "AdaptiveCards.Uwp.h"
+#include "AdaptiveCards.Rendering.Uwp.h"
 #include "Enums.h"
 #include "HostConfig.h"
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     class AdaptiveContainerStyleDefinition :
         public Microsoft::WRL::RuntimeClass<
             Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::WinRtClassicComMix>,
-            ABI::AdaptiveCards::Uwp::IAdaptiveContainerStyleDefinition>
+            ABI::AdaptiveNamespace::IAdaptiveContainerStyleDefinition>
     {
-        InspectableClass(RuntimeClass_AdaptiveCards_Uwp_AdaptiveContainerStyleDefinition, BaseTrust)
+        AdaptiveRuntime(AdaptiveContainerStyleDefinition)
 
     public:
         HRESULT RuntimeClassInitialize() noexcept;
@@ -20,13 +19,13 @@ namespace AdaptiveCards { namespace Uwp
         IFACEMETHODIMP get_BackgroundColor(_Out_ ABI::Windows::UI::Color* value);
         IFACEMETHODIMP put_BackgroundColor(_In_ ABI::Windows::UI::Color value);
 
-        IFACEMETHODIMP get_ForegroundColors(_Out_ ABI::AdaptiveCards::Uwp::IAdaptiveColorsConfig** colorsConfig);
-        IFACEMETHODIMP put_ForegroundColors(_In_ ABI::AdaptiveCards::Uwp::IAdaptiveColorsConfig* colorsConfig);
+        IFACEMETHODIMP get_ForegroundColors(_Out_ ABI::AdaptiveNamespace::IAdaptiveColorsConfig** colorsConfig);
+        IFACEMETHODIMP put_ForegroundColors(_In_ ABI::AdaptiveNamespace::IAdaptiveColorsConfig* colorsConfig);
 
     private:
         ABI::Windows::UI::Color m_backgroundColor;
-        Microsoft::WRL::ComPtr<ABI::AdaptiveCards::Uwp::IAdaptiveColorsConfig> m_foregroundColors;
+        Microsoft::WRL::ComPtr<ABI::AdaptiveNamespace::IAdaptiveColorsConfig> m_foregroundColors;
     };
 
     ActivatableClass(AdaptiveContainerStyleDefinition);
-}}
+AdaptiveNamespaceEnd

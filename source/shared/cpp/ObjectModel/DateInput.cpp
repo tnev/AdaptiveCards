@@ -1,11 +1,13 @@
+#include "pch.h"
 #include "DateInput.h"
 #include "ParseUtil.h"
 
-using namespace AdaptiveCards;
+using namespace AdaptiveSharedNamespace;
 
 DateInput::DateInput() :
     BaseInputElement(CardElementType::DateInput)
 {
+    PopulateKnownPropertiesSet();
 }
 
 Json::Value DateInput::SerializeToJsonValue()
@@ -83,4 +85,12 @@ std::shared_ptr<BaseCardElement> DateInputParser::DeserializeFromString(
     const std::string& jsonString)
 {
     return DateInputParser::Deserialize(elementParserRegistration, actionParserRegistration, ParseUtil::GetJsonValueFromString(jsonString));
+}
+
+void DateInput::PopulateKnownPropertiesSet() 
+{
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Max));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Min));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Value));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Placeholder));
 }

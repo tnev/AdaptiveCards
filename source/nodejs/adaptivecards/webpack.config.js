@@ -1,26 +1,41 @@
+var webpack = require("webpack");
+var path = require("path");
+
 module.exports = {
-    entry: "./src/adaptivecards.ts",
+    devtool: "source-map",
+    entry: {
+        "adaptivecards": ["./src/adaptivecards.ts"],
+        "adaptivecards.min": ["./src/adaptivecards.ts"]
+    },
     output: {
-        filename: "./dist/adaptivecards.js",
-        library: 'AdaptiveCards'
+        path: path.resolve(__dirname, "dist"),
+        filename: "[name].js",
+        library: "AdaptiveCards"
     },
-
     resolve: {
-        extensions: [".webpack.js", ".web.js", ".ts", ".js"]
+        extensions: [".ts", ".tsx", ".js"]
     },
-
+    plugins: [
+        new webpack.optimize.UglifyJsPlugin({
+            minimize: true,
+            sourceMap: true,
+            include: /\.min\.js$/,
+        })
+    ],
     module: {
         rules: [
-            // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
             {
                 test: /\.ts$/,
-                loader: "ts-loader",
+                loader: "awesome-typescript-loader",
+                exclude: /(node_modules|__tests__)/,
+                query: {
+                    declaration: false,
+                }
             },
             {
                 test: /\.json$/,
                 loader: "json-loader",
             }
-
         ]
-    },
+    }
 };

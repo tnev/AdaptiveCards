@@ -7,8 +7,7 @@
 #include "ParseUtil.h"
 #include "Separator.h"
 
-namespace AdaptiveCards
-{
+AdaptiveSharedNamespaceStart
 class Container;
 class BaseCardElement
 {
@@ -22,6 +21,9 @@ public:
     std::shared_ptr<Separator> GetSeparator() const;
     void SetSeparator(const std::shared_ptr<Separator> value);
     */
+
+    virtual std::string GetElementTypeString() const;
+    virtual void SetElementTypeString(const std::string value);
 
     virtual bool GetSeparator() const;
     virtual void SetSeparator(const bool value);
@@ -40,21 +42,29 @@ public:
     template <typename T>
     static std::shared_ptr<T> Deserialize(const Json::Value& json);
 
-    static std::shared_ptr<AdaptiveCards::BaseActionElement> DeserializeSelectAction(
-        std::shared_ptr<AdaptiveCards::ElementParserRegistration> elementParserRegistration,
-        std::shared_ptr<AdaptiveCards::ActionParserRegistration> actionParserRegistration,
+    static std::shared_ptr<AdaptiveSharedNamespace::BaseActionElement> DeserializeSelectAction(
+        std::shared_ptr<AdaptiveSharedNamespace::ElementParserRegistration> elementParserRegistration,
+        std::shared_ptr<AdaptiveSharedNamespace::ActionParserRegistration> actionParserRegistration,
         const Json::Value& json, AdaptiveCardSchemaKey key);
+
+    Json::Value GetAdditionalProperties();
+    void SetAdditionalProperties(Json::Value additionalProperties);
 
 protected:
     static Json::Value SerializeSelectAction(const std::shared_ptr<BaseActionElement> selectAction);
 
+    std::unordered_set<std::string> m_knownProperties;
+
 private:
-    static const std::unordered_map<ActionType, std::function<std::shared_ptr<BaseActionElement>(const Json::Value&)>, EnumHash> ActionParsers;
+    void PopulateKnownPropertiesSet();
+
     CardElementType m_type;
     Spacing m_spacing;
     std::string m_id;
+    std::string m_typeString;
     //std::shared_ptr<Separator> m_separator; Issue #629 to make separator an object
     bool m_separator;
+    Json::Value m_additionalProperties;
 };
 
 template <typename T>
@@ -78,6 +88,17 @@ std::shared_ptr<T> BaseCardElement::Deserialize(const Json::Value& json)
     }
     */
 
+    // Walk all properties and put any unknown ones in the additional properties json
+    for (Json::Value::const_iterator it = json.begin(); it != json.end(); it++)
+    {
+        std::string key = it.key().asCString();
+        if (baseCardElement->m_knownProperties.find(key) == baseCardElement->m_knownProperties.end())
+        {
+            baseCardElement->m_additionalProperties[key] = *it;
+        }
+    }
+
     return cardElement;
 }
-}
+AdaptiveSharedNamespaceEnd
+

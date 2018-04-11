@@ -6,8 +6,7 @@
 #include "BaseCardElement.h"
 #include "ElementParserRegistration.h"
 
-namespace AdaptiveCards
-{
+AdaptiveSharedNamespaceStart
 class BaseCardElement;
 class FactSet : public BaseCardElement
 {
@@ -23,10 +22,12 @@ public:
     const std::vector<std::shared_ptr<Fact>>& GetFacts() const;
 
 private:
+    void PopulateKnownPropertiesSet();
+
     std::vector<std::shared_ptr<Fact>> m_facts; 
 };
 
-class FactSetParser : public IBaseCardElementParser
+class FactSetParser : public BaseCardElementParser
 {
 public:
     std::shared_ptr<BaseCardElement> Deserialize(
@@ -39,4 +40,4 @@ public:
         std::shared_ptr<ActionParserRegistration> actionParserRegistration,
         const std::string& jsonString);
 };
-}
+AdaptiveSharedNamespaceEnd

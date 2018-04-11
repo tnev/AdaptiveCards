@@ -1,65 +1,42 @@
+var webpack = require("webpack");
+var path = require("path");
+
 var visualizer = {
-    entry: "./src/App.ts",
+    devtool: "source-map",
+    entry: {
+        "adaptivecards-visualizer": ["./src/app.ts"],
+        "adaptivecards-visualizer.min": ["./src/app.ts"]
+    },
     output: {
-        filename: "./built/adaptivecards-visualizer.js"
+        path: path.resolve(__dirname, "dist"),
+        filename: "[name].js",
     },
-
-    // Enable sourcemaps for debugging webpack's output.
-    //devtool: "source-map",
-
     resolve: {
-        // Add '.ts' as resolvable extensions.
-        extensions: [".webpack.js", ".web.js", ".ts", ".js"]
+        extensions: [".ts", ".tsx", ".js"]
     },
-
+    plugins: [
+        new webpack.optimize.UglifyJsPlugin({
+            minimize: true,
+            sourceMap: true,
+            include: /\.min\.js$/,
+        })
+    ],
     module: {
         rules: [
-            // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
             {
-                test: /\.tsx?$/,
-                loader: "ts-loader",
+                test: /\.ts$/,
+                loader: "ts-loader"
             },
             {
                 test: /\.json$/,
                 loader: "json-loader",
             }
-
         ]
     },
     externals: {
-        "adaptivecards": "AdaptiveCards"
+        "adaptivecards": { var: "AdaptiveCards" },
+        "markdown-it": { var: "markdownit"}
     }
 };
 
-var visualizerWithRenderer = {
-    entry: "./src/App.ts",
-    output: {
-        filename: "./built/visualizer-with-renderer.js"
-    },
-
-    // Enable sourcemaps for debugging webpack's output.
-    //devtool: "source-map",
-
-    resolve: {
-        // Add '.ts' as resolvable extensions.
-        extensions: [".webpack.js", ".web.js", ".ts", ".js"],
-    },
-
-    module: {
-        loaders: [
-            // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
-            {
-                test: /\.tsx?$/,
-                loader: "ts-loader",
-            },
-            {
-                test: /\.json$/,
-                loader: "json-loader",
-            }
-
-        ]
-    },
-
-};
-
-module.exports = [visualizer, visualizerWithRenderer];
+module.exports = visualizer;

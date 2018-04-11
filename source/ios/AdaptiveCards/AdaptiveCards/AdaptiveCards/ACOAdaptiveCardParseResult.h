@@ -5,12 +5,18 @@
 //  Copyright © 2017 Microsoft. All rights reserved.
 //
 
-#import "ACOParseResult.h"
+#import <Foundation/Foundation.h>
+#import "ACRParseWarning.h"
 
 @class ACOAdaptiveCard;
 
-@interface ACOAdaptiveCardParseResult:ACOParseResult
+@interface ACOAdaptiveCardParseResult:NSObject
 
-@property ACOAdaptiveCard *card;
+@property(readonly) ACOAdaptiveCard *card;
+@property(readonly) BOOL isValid;
+@property(readonly) NSArray<NSError *> *parseErrors;
+@property(readonly) NSArray<ACRParseWarning *> *parseWarnings;
 
-@end    
+- (instancetype)init:(ACOAdaptiveCard *)card errors:(NSArray<NSError *> *)errors warnings:(NSArray<ACRParseWarning *> *)warnings;
+
+@end

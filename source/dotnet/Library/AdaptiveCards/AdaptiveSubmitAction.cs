@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using System.ComponentModel;
+using System.Xml.Serialization;
 
 namespace AdaptiveCards
 {
@@ -7,20 +9,32 @@ namespace AdaptiveCards
     ///     data to be submitted. It is up to the client to determine how that data is processed. For example: With
     ///     BotFramework bots the client would send an activity through the messaging medium to the bot.
     /// </summary>
+#if !NETSTANDARD1_3
+    [XmlType(TypeName = AdaptiveSubmitAction.TypeName)]
+#endif
     public class AdaptiveSubmitAction : AdaptiveAction
     {
         public const string TypeName = "Action.Submit";
 
-        public override string Type => TypeName;
+#if !NETSTANDARD1_3
+        [XmlIgnore]
+#endif
+        public override string Type { get; set; } = TypeName;
 
         /// <summary>
         ///     initial data that input fields will be combined with. This is essentially 'hidden' properties, Example:
         ///     {"id":"123123123"}
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+#if !NETSTANDARD1_3
+        [XmlIgnore]
+#endif
         public object Data { get; set; }
 
         [JsonIgnore]
+#if !NETSTANDARD1_3
+        [XmlText]
+#endif
         public string DataJson
         {
             get

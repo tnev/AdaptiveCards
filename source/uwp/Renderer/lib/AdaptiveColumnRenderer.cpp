@@ -7,11 +7,10 @@
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 using namespace ABI::Windows::Foundation;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     HRESULT AdaptiveColumnRenderer::RuntimeClassInitialize() noexcept try
     {
         return S_OK;
@@ -28,4 +27,4 @@ namespace AdaptiveCards { namespace Uwp
         return S_OK;
     }
 
-}}
+AdaptiveNamespaceEnd

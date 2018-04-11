@@ -1,11 +1,13 @@
+#include "pch.h"
 #include "ChoiceInput.h"
 #include "ChoiceSetInput.h"
 #include "ParseUtil.h"
 
-using namespace AdaptiveCards;
+using namespace AdaptiveSharedNamespace;
 
 ChoiceSetInput::ChoiceSetInput() : BaseInputElement(CardElementType::ChoiceSetInput)
 {
+    PopulateKnownPropertiesSet();
 }
 
 ChoiceSetInput::ChoiceSetInput(
@@ -15,6 +17,7 @@ ChoiceSetInput::ChoiceSetInput(
     BaseInputElement(CardElementType::ChoiceSetInput, spacing, separation),
     m_choices(choices)
 {
+    PopulateKnownPropertiesSet();
 }
 
 ChoiceSetInput::ChoiceSetInput(
@@ -40,6 +43,7 @@ Json::Value ChoiceSetInput::SerializeToJsonValue()
 
     root[AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Style)] = ChoiceSetStyleToString(GetChoiceSetStyle());
     root[AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::IsMultiSelect)] = GetIsMultiSelect();
+    root[AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Value)] = GetValue();
 
     std::string propertyName = AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Choices);
     root[propertyName] = Json::Value(Json::arrayValue);
@@ -51,24 +55,34 @@ Json::Value ChoiceSetInput::SerializeToJsonValue()
     return root;
 }
 
-bool AdaptiveCards::ChoiceSetInput::GetIsMultiSelect() const
+bool ChoiceSetInput::GetIsMultiSelect() const
 {
     return m_isMultiSelect;
 }
 
-void AdaptiveCards::ChoiceSetInput::SetIsMultiSelect(const bool isMultiSelect)
+void ChoiceSetInput::SetIsMultiSelect(const bool isMultiSelect)
 {
     m_isMultiSelect = isMultiSelect;
 }
 
-ChoiceSetStyle AdaptiveCards::ChoiceSetInput::GetChoiceSetStyle() const
+ChoiceSetStyle ChoiceSetInput::GetChoiceSetStyle() const
 {
     return m_choiceSetStyle;
 }
 
-void AdaptiveCards::ChoiceSetInput::SetChoiceSetStyle(const ChoiceSetStyle choiceSetStyle)
+void ChoiceSetInput::SetChoiceSetStyle(const ChoiceSetStyle choiceSetStyle)
 {
     m_choiceSetStyle = choiceSetStyle;
+}
+
+std::string ChoiceSetInput::GetValue() const
+{
+    return m_value;
+}
+
+void ChoiceSetInput::SetValue(std::string value)
+{
+    m_value = value;
 }
 
 std::shared_ptr<BaseCardElement> ChoiceSetInputParser::Deserialize(
@@ -82,6 +96,7 @@ std::shared_ptr<BaseCardElement> ChoiceSetInputParser::Deserialize(
 
     choiceSet->SetChoiceSetStyle(ParseUtil::GetEnumValue<ChoiceSetStyle>(json, AdaptiveCardSchemaKey::Style, ChoiceSetStyle::Compact, ChoiceSetStyleFromString));
     choiceSet->SetIsMultiSelect(ParseUtil::GetBool(json, AdaptiveCardSchemaKey::IsMultiSelect, false));
+    choiceSet->SetValue(ParseUtil::GetString(json, AdaptiveCardSchemaKey::Value, false));
 
     // Parse Choices
     auto choices = ParseUtil::GetElementCollectionOfSingleType<ChoiceInput>(elementParserRegistration, actionParserRegistration, json, AdaptiveCardSchemaKey::Choices, ChoiceInput::Deserialize, true);
@@ -96,4 +111,12 @@ std::shared_ptr<BaseCardElement> ChoiceSetInputParser::DeserializeFromString(
     const std::string& jsonString)
 {
     return ChoiceSetInputParser::Deserialize(elementParserRegistration, actionParserRegistration, ParseUtil::GetJsonValueFromString(jsonString));
+}
+
+void ChoiceSetInput::PopulateKnownPropertiesSet() 
+{
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Choices));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::IsMultiSelect));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Style));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Value));
 }

@@ -1,21 +1,20 @@
 #pragma once
 
-#include "AdaptiveCards.Uwp.h"
+#include "AdaptiveCards.Rendering.Uwp.h"
 #include "Enums.h"
 #include "HostConfig.h"
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     class AdaptiveCardConfig :
         public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::WinRtClassicComMix>,
-        ABI::AdaptiveCards::Uwp::IAdaptiveCardConfig>
+        ABI::AdaptiveNamespace::IAdaptiveCardConfig>
     {
-        InspectableClass(RuntimeClass_AdaptiveCards_Uwp_AdaptiveCardConfig, BaseTrust)
+        AdaptiveRuntime(AdaptiveCardConfig)
 
     public:
         HRESULT RuntimeClassInitialize() noexcept;
-        HRESULT RuntimeClassInitialize(AdaptiveCards::AdaptiveCardConfig adaptiveCardConfig) noexcept;
+        HRESULT RuntimeClassInitialize(AdaptiveSharedNamespace::AdaptiveCardConfig adaptiveCardConfig) noexcept;
 
         IFACEMETHODIMP get_AllowCustomStyle(_Out_ boolean* allowCustomStyle);
         IFACEMETHODIMP put_AllowCustomStyle(_In_ boolean allowCustomStyle);
@@ -25,5 +24,4 @@ namespace AdaptiveCards { namespace Uwp
     };
 
     ActivatableClass(AdaptiveCardConfig);
-}
-}
+AdaptiveNamespaceEnd

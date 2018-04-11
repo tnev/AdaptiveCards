@@ -4,17 +4,15 @@
 #include "Util.h"
 #include "Vector.h"
 #include <windows.foundation.collections.h>
-#include "AdaptiveCardRendererComponent.h"
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 using namespace ABI::Windows::Foundation::Collections;
 using namespace ABI::Windows::UI::Xaml;
 using namespace ABI::Windows::UI::Xaml::Controls;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     AdaptiveImageSet::AdaptiveImageSet()
     {
         m_images = Microsoft::WRL::Make<Vector<IAdaptiveImage*>>();
@@ -22,12 +20,12 @@ namespace AdaptiveCards { namespace Uwp
 
     HRESULT AdaptiveImageSet::RuntimeClassInitialize() noexcept try
     {
-        std::shared_ptr<AdaptiveCards::ImageSet> imageSet = std::make_shared<AdaptiveCards::ImageSet>();
+        std::shared_ptr<AdaptiveSharedNamespace::ImageSet> imageSet = std::make_shared<AdaptiveSharedNamespace::ImageSet>();
         return RuntimeClassInitialize(imageSet);
     } CATCH_RETURN;
 
     _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::RuntimeClassInitialize(const std::shared_ptr<AdaptiveCards::ImageSet>& sharedImageSet)
+    HRESULT AdaptiveImageSet::RuntimeClassInitialize(const std::shared_ptr<AdaptiveSharedNamespace::ImageSet>& sharedImageSet) try
     {
         if (sharedImageSet == nullptr)
         {
@@ -36,14 +34,11 @@ namespace AdaptiveCards { namespace Uwp
 
         GenerateImagesProjection(sharedImageSet->GetImages(), m_images.Get());
 
-        m_imageSize = static_cast<ABI::AdaptiveCards::Uwp::ImageSize>(sharedImageSet->GetImageSize());
-
-        m_spacing = static_cast<ABI::AdaptiveCards::Uwp::Spacing>(sharedImageSet->GetSpacing());
-        m_separator = sharedImageSet->GetSeparator();
-        RETURN_IF_FAILED(UTF8ToHString(sharedImageSet->GetId(), m_id.GetAddressOf()));
-
+        m_imageSize = static_cast<ABI::AdaptiveNamespace::ImageSize>(sharedImageSet->GetImageSize());
+        
+        InitializeBaseElement(std::static_pointer_cast<BaseCardElement>(sharedImageSet));
         return S_OK;
-    }
+    } CATCH_RETURN;
 
     _Use_decl_annotations_
         IFACEMETHODIMP AdaptiveImageSet::get_Images(IVector<IAdaptiveImage*>** images)
@@ -52,14 +47,14 @@ namespace AdaptiveCards { namespace Uwp
     }
 
     _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::get_ImageSize(ABI::AdaptiveCards::Uwp::ImageSize* imageSize)
+    HRESULT AdaptiveImageSet::get_ImageSize(ABI::AdaptiveNamespace::ImageSize* imageSize)
     {
         *imageSize = m_imageSize;
         return S_OK;
     }
 
     _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::put_ImageSize(ABI::AdaptiveCards::Uwp::ImageSize imageSize)
+    HRESULT AdaptiveImageSet::put_ImageSize(ABI::AdaptiveNamespace::ImageSize imageSize)
     {
         m_imageSize = imageSize;
         return S_OK; 
@@ -72,87 +67,17 @@ namespace AdaptiveCards { namespace Uwp
         return S_OK;
     }
 
-    _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::get_Spacing(ABI::AdaptiveCards::Uwp::Spacing* spacing)
+    HRESULT AdaptiveImageSet::GetSharedModel(std::shared_ptr<AdaptiveSharedNamespace::BaseCardElement>& sharedModel) try
     {
-        *spacing = m_spacing;
-        return S_OK;
-    }
+        std::shared_ptr<AdaptiveSharedNamespace::ImageSet> imageSet = std::make_shared<AdaptiveSharedNamespace::ImageSet>();
 
-    _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::put_Spacing(ABI::AdaptiveCards::Uwp::Spacing spacing)
-    {
-        m_spacing = spacing;
-        return S_OK;
-    }
+        RETURN_IF_FAILED(SetSharedElementProperties(std::static_pointer_cast<AdaptiveSharedNamespace::BaseCardElement>(imageSet)));
 
-    _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::get_Separator(boolean* separator)
-    {
-        *separator = m_separator;
-        return S_OK;
-
-        //Issue #629 to make separator an object
-        //return GenerateSeparatorProjection(m_sharedImageSet->GetSeparator(), separator);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::put_Separator(boolean separator)
-    {
-        m_separator = separator;
-
-        /*Issue #629 to make separator an object
-        std::shared_ptr<Separator> sharedSeparator;
-        RETURN_IF_FAILED(GenerateSharedSeparator(separator, &sharedSeparator));
-
-        m_sharedImageSet->SetSeparator(sharedSeparator);
-        */
-
-        return S_OK;
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::get_Id(HSTRING* id)
-    {
-        return m_id.CopyTo(id);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::put_Id(HSTRING id)
-    {
-        return m_id.Set(id);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::get_ElementTypeString(HSTRING* type)
-    {
-        ElementType typeEnum;
-        RETURN_IF_FAILED(get_ElementType(&typeEnum));
-        return ProjectedElementTypeToHString(typeEnum, type);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::ToJson(ABI::Windows::Data::Json::IJsonObject** result)
-    {
-        std::shared_ptr<AdaptiveCards::ImageSet> sharedModel;
-        RETURN_IF_FAILED(GetSharedModel(sharedModel));
-
-        return StringToJsonObject(sharedModel->Serialize(), result);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveImageSet::GetSharedModel(std::shared_ptr<AdaptiveCards::ImageSet>& sharedModel)
-    {
-        std::shared_ptr<AdaptiveCards::ImageSet> imageSet = std::make_shared<AdaptiveCards::ImageSet>();
-
-        RETURN_IF_FAILED(SetSharedElementProperties(this, std::dynamic_pointer_cast<AdaptiveCards::BaseCardElement>(imageSet)));
-
-        imageSet->SetImageSize(static_cast<AdaptiveCards::ImageSize>(m_imageSize));
+        imageSet->SetImageSize(static_cast<AdaptiveSharedNamespace::ImageSize>(m_imageSize));
 
         RETURN_IF_FAILED(GenerateSharedImages(m_images.Get(), imageSet->GetImages()));
 
         sharedModel = imageSet;
         return S_OK;
-    }
-}
-}
+    }CATCH_RETURN;
+AdaptiveNamespaceEnd

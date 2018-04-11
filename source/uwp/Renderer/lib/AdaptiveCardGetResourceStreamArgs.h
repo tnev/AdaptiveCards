@@ -1,14 +1,13 @@
 #pragma once
-#include "AdaptiveCards.Uwp.h"
+#include "AdaptiveCards.Rendering.Uwp.h"
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     class AdaptiveCardGetResourceStreamArgs :
         public Microsoft::WRL::RuntimeClass<
             Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::WinRt>,
-            ABI::AdaptiveCards::Uwp::IAdaptiveCardGetResourceStreamArgs>
+            ABI::AdaptiveNamespace::IAdaptiveCardGetResourceStreamArgs>
     {
-        InspectableClass(RuntimeClass_AdaptiveCards_Uwp_AdaptiveCardGetResourceStreamArgs, BaseTrust)
+        AdaptiveRuntime(AdaptiveCardGetResourceStreamArgs)
 
     public:
         HRESULT RuntimeClassInitialize(_In_ ABI::Windows::Foundation::IUriRuntimeClass* url);
@@ -18,4 +17,4 @@ namespace AdaptiveCards { namespace Uwp
     private:
         Microsoft::WRL::ComPtr<ABI::Windows::Foundation::IUriRuntimeClass> m_url;
     };
-}}
+AdaptiveNamespaceEnd

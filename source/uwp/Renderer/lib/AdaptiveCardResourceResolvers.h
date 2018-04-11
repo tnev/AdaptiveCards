@@ -1,24 +1,23 @@
 #pragma once
-#include "AdaptiveCards.Uwp.h"
+#include "AdaptiveCards.Rendering.Uwp.h"
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     class AdaptiveCardResourceResolvers :
         public Microsoft::WRL::RuntimeClass<
             Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::WinRtClassicComMix>,
-            ABI::AdaptiveCards::Uwp::IAdaptiveCardResourceResolvers>
+            ABI::AdaptiveNamespace::IAdaptiveCardResourceResolvers>
     {
-        InspectableClass(RuntimeClass_AdaptiveCards_Uwp_AdaptiveCardResourceResolvers, BaseTrust)
+        AdaptiveRuntime(AdaptiveCardResourceResolvers)
 
     public:
         HRESULT RuntimeClassInitialize() noexcept;
 
-        IFACEMETHODIMP Set(_In_ HSTRING scheme, _In_ ABI::AdaptiveCards::Uwp::IAdaptiveCardResourceResolver* resolver);
-        IFACEMETHODIMP Get(_In_ HSTRING scheme, _Outptr_ ABI::AdaptiveCards::Uwp::IAdaptiveCardResourceResolver** resolver);
+        IFACEMETHODIMP Set(_In_ HSTRING scheme, _In_ ABI::AdaptiveNamespace::IAdaptiveCardResourceResolver* resolver);
+        IFACEMETHODIMP Get(_In_ HSTRING scheme, _Outptr_ ABI::AdaptiveNamespace::IAdaptiveCardResourceResolver** resolver);
 
     private:
-        std::map<std::string, Microsoft::WRL::ComPtr<ABI::AdaptiveCards::Uwp::IAdaptiveCardResourceResolver>> m_resourceResolvers;
+        std::map<std::string, Microsoft::WRL::ComPtr<ABI::AdaptiveNamespace::IAdaptiveCardResourceResolver>> m_resourceResolvers;
     };
 
     ActivatableClass(AdaptiveCardResourceResolvers);
-}}
+AdaptiveNamespaceEnd

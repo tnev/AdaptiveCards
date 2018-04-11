@@ -1,31 +1,22 @@
-﻿import * as Adaptive from "adaptivecards";
+﻿import * as AdaptiveCards from "adaptivecards";
+import * as MarkdownIt from "markdown-it";
 import * as Constants from "./constants";
 
 import { HostContainer } from "./containers/host-container";
-import { LiveTileContainer } from "./containers/live-tile";
 import { SkypeContainer } from "./containers/skype";
 import { WebChatContainer } from "./containers/webchat";
 import { TeamsContainer } from "./containers/teams";
 import { ToastContainer } from "./containers/toast";
-import { GroupMeContainer } from "./containers/groupme";
-import { TelegramContainer } from "./containers/telegram";
-import { SMSContainer } from "./containers/sms";
-import { SlackContainer } from "./containers/slack";
-import { KikContainer } from "./containers/kik";
-import { FacebookContainer } from "./containers/facebook";
-import { BingContainer } from "./containers/bing";
 import { TimelineContainer } from "./containers/timeline";
 import { OutlookContainer } from "./containers/outlook";
+import { BotFrameworkImageContainer } from "./containers/bf-image";
 
-import * as ace from "brace";
-import "brace/mode/json";
-import "brace/theme/chrome";
-import * as vkbeautify from "vkbeautify";
+import { adaptiveCardSchema } from "./adaptive-card-schema";
+import { CortanaContainer } from "./containers/cortana";
 
-var editor: ace.Editor;
 var hostContainerOptions: Array<HostContainerOption> = [];
 var hostContainerPicker: HTMLSelectElement;
-var lastValidationErrors: Array<Adaptive.IValidationError> = [];
+var lastValidationErrors: Array<AdaptiveCards.IValidationError> = [];
 
 function getSelectedHostContainer(): HostContainer {
     return hostContainerOptions[hostContainerPicker.selectedIndex].hostContainer;
@@ -38,56 +29,73 @@ function setContent(element) {
     contentContainer.appendChild(element);
 }
 
-function renderCard(): HTMLElement {
+function renderCard(target: HTMLElement): HTMLElement {
     document.getElementById("errorContainer").hidden = true;
     lastValidationErrors = [];
 
-    var hostContainer = getSelectedHostContainer();
-
     var json = JSON.parse(currentCardPayload);
 
-    var adaptiveCard = new Adaptive.AdaptiveCard();
 
-    adaptiveCard.hostConfig = new Adaptive.HostConfig(currentConfigPayload);
-       
-    adaptiveCard.parse(json);
-    
-    lastValidationErrors = lastValidationErrors.concat(adaptiveCard.validate());
+    // Show all Host Apps at once, not working yet (to test uncomment the - 1 below)
+    if (hostContainerPicker.selectedIndex === hostContainerPicker.length /* -1 */) {
 
-    showValidationErrors();
+        var wrapper = document.createElement("div");
+        hostContainerOptions.forEach(hostContainerOption => {
 
-    return hostContainer.render(adaptiveCard.render(), adaptiveCard.renderSpeech());
+            var label = document.createElement("h4");
+            label.innerText = hostContainerOption.name;
+            wrapper.appendChild(label);
+
+            var cardContainer = document.createElement("div");
+
+            var adaptiveCard = new AdaptiveCards.AdaptiveCard();
+            adaptiveCard.hostConfig = new AdaptiveCards.HostConfig(hostContainerOption.hostContainer.getHostConfig());
+            adaptiveCard.parse(json);
+
+            wrapper.appendChild(hostContainerOption.hostContainer.render(adaptiveCard, cardContainer));            
+        });
+
+        return target.appendChild(wrapper);
+    } else {
+        var adaptiveCard = new AdaptiveCards.AdaptiveCard();
+        adaptiveCard.hostConfig = new AdaptiveCards.HostConfig(currentConfigPayload);
+
+        adaptiveCard.parse(json);
+
+        lastValidationErrors = lastValidationErrors.concat(adaptiveCard.validate());
+
+        showValidationErrors();
+
+        return getSelectedHostContainer().render(adaptiveCard, target);
+    }
 }
 
 function tryRenderCard() {
-    var renderedCard: HTMLElement;
-
-    try {
-        renderedCard = renderCard();
-    }
-    catch (ex) {
-        renderedCard = document.createElement("div");
-        renderedCard.innerText = ex.message;
-    }
-
     var contentContainer = document.getElementById("content");
     contentContainer.innerHTML = '';
-    contentContainer.appendChild(renderedCard);
+
+    try {
+        renderCard(contentContainer);
+    }
+    catch (ex) {
+        var renderedCard = document.createElement("div");
+        renderedCard.innerText = ex.message;
+        contentContainer.appendChild(renderedCard);
+    }
 
     try {
         sessionStorage.setItem("AdaptivePayload", currentCardPayload);
+        history.pushState(hostContainerPicker.value, `Visualizer - ${hostContainerPicker.value}`, "index.html" + `?hostApp=${hostContainerPicker.value}`);
     }
     catch (e) {
         console.log("Unable to cache JSON payload.")
     }
+
+    isLoaded = true;
 }
 
 function openFilePicker() {
     document.getElementById("filePicker").click();
-}
-
-function setEditorText(text: string) {
-    editor.session.setValue(text);
 }
 
 function filePickerChanged(evt) {
@@ -131,7 +139,7 @@ function loadStyleSheetAndConfig() {
     currentConfigPayload = JSON.stringify(selectedHostContainer.getHostConfig(), null, '\t');
 
     if (!isCardEditor) {
-        setEditorText(currentConfigPayload);
+        monacoEditor.setValue(currentConfigPayload);
     }
 }
 
@@ -166,76 +174,29 @@ class HostContainerOption {
 
 var currentCardPayload: string = "";
 var currentConfigPayload: string = "";
+var isLoaded = false;;
 
-function setupEditor() {
-    editor = ace.edit("editor");
-    editor.setTheme("ace/theme/chrome");
-    editor.setOptions(
-        {
-            showPrintMargin: false,
-            displayIndentGuides: false,
-            showFoldWidgets: true,
-            highlightSelectedWord: false,
-            fontSize: "14px"
-        });
-    editor.getSession().setMode("ace/mode/json");
-    editor.getSession().on(
-        "change",
-        function (e) {
-            if (isCardEditor) {
-                currentCardPayload = editor.getValue();
-            }
-            else {
-                currentConfigPayload = editor.getValue();
-            }
+function hostContainerPickerChanged() {
+    loadStyleSheetAndConfig();
 
-            tryRenderCard();
-        });
-
-    // Load the cached payload if the user had one
-    try {
-        var cachedPayload = sessionStorage.getItem("AdaptivePayload");
-        var cardUrl = document.location.search.substring(1).split('card=')[1];
-
-        if (cardUrl) {
-            currentCardPayload = "";
-            var xhttp = new XMLHttpRequest();
-            xhttp.onload = function () {
-                currentCardPayload = xhttp.responseText;
-                setEditorText(currentCardPayload);
-            };
-
-            xhttp.open("GET", cardUrl, true);
-            xhttp.send();
-        }
-        else if (cachedPayload) {
-            currentCardPayload = cachedPayload;
-        }
-        else {
-            currentCardPayload = Constants.defaultPayload;
-        }
-    }
-    catch (e) {
-        currentCardPayload = Constants.defaultPayload;
+    if (isLoaded) {
+        tryRenderCard();
     }
 }
 
 function setupContainerPicker() {
+    hostContainerPicker = <HTMLSelectElement>document.getElementById("hostContainerPicker");
+
 
     hostContainerOptions.push(
         new HostContainerOption(
-            "Microsoft Teams",
-            new TeamsContainer("css/teams.css")));
+            "Bot Framework WebChat",
+            new WebChatContainer("css/webchat.css")));
 
     hostContainerOptions.push(
         new HostContainerOption(
-            "Microsoft Outlook Actionable Messages",
-            new OutlookContainer("css/outlook.css")));
-
-    hostContainerOptions.push(
-        new HostContainerOption(
-            "Windows Toast Notification",
-            new ToastContainer(362, "css/toast.css")));
+            "Cortana Skills",
+            new CortanaContainer(true, "css/cortana.css")));
 
     hostContainerOptions.push(
         new HostContainerOption(
@@ -244,84 +205,57 @@ function setupContainerPicker() {
 
     hostContainerOptions.push(
         new HostContainerOption(
-            "Windows Live Tile",
-            new LiveTileContainer(310, 310, "css/liveTile.css")));
-
-    hostContainerOptions.push(
-        new HostContainerOption(
-            "Skype",
+            "Skype (Preview)",
             new SkypeContainer(350, "css/skype.css")));
+            
+    hostContainerOptions.push(
+        new HostContainerOption(
+            "Outlook Actionable Messages (Preview)",
+            new OutlookContainer("css/outlook.css")));
 
     hostContainerOptions.push(
         new HostContainerOption(
-            "WebChat (Bot Framework)",
-            new WebChatContainer("css/webchat.css")));
+            "Microsoft Teams (Preview)",
+            new TeamsContainer("css/teams.css")));
 
     hostContainerOptions.push(
         new HostContainerOption(
-            "Bing (Bot Framework)",
-            new BingContainer(368, "css/skype.css")));
+            "Windows Notifications (Preview)",
+            new ToastContainer(362, "css/toast.css")));
 
     hostContainerOptions.push(
         new HostContainerOption(
-            "Kik (Bot Framework)",
-            new KikContainer(400, "css/kik.css")));
+            "Bot Framework Other Channels (Image render)",
+            new BotFrameworkImageContainer(400, "css/bf.css")));
 
-    hostContainerOptions.push(
-        new HostContainerOption(
-            "Slack (Bot Framework)",
-            new SlackContainer(500, "css/slack.css")));
+    // hostContainerOptions.push(
+    //     new HostContainerOption(
+    //         "All at once",
+    //         new BotFrameworkImageContainer(400, "css/bf.css")));
 
-    hostContainerOptions.push(
-        new HostContainerOption(
-            "Facebook (Bot Framework)",
-            new FacebookContainer(450, "css/facebook.css")));
+    hostContainerPicker.addEventListener("change", hostContainerPickerChanged);
 
-    hostContainerOptions.push(
-        new HostContainerOption(
-            "SMS (Bot Framework)",
-            new SMSContainer(400, "css/sms.css")));
+    for (var i = 0; i < hostContainerOptions.length; i++) {
+        var option = document.createElement("option");
+        option.value = hostContainerOptions[i].name;
+        option.text = hostContainerOptions[i].name;
 
-    hostContainerOptions.push(
-        new HostContainerOption(
-            "Telegram (Bot Framework)",
-            new TelegramContainer(400, "css/telegram.css")));
-
-    hostContainerOptions.push(
-        new HostContainerOption(
-            "GroupMe (Bot Framework)",
-            new GroupMeContainer(450, "css/groupme.css")));
-
-    if (hostContainerPicker) {
-        hostContainerPicker.addEventListener(
-            "change", () => {
-                // Update the query string
-                var htmlFileName = location.pathname.indexOf("dev.html") >= 0 ? "dev.html" : "index.html";
-
-                history.pushState(hostContainerPicker.value, `Visualizer - ${hostContainerPicker.value}`, htmlFileName + `?hostApp=${hostContainerPicker.value}`);
-
-                loadStyleSheetAndConfig();
-                tryRenderCard();
-            });
-
-        for (var i = 0; i < hostContainerOptions.length; i++) {
-            var option = document.createElement("option");
-            option.value = hostContainerOptions[i].name;
-            option.text = hostContainerOptions[i].name;
-
-            hostContainerPicker.appendChild(option);
-        }
+        hostContainerPicker.appendChild(option);
     }
 }
 
 function setContainerAppFromUrl() {
     var requestedHostApp = getParameterByName("hostApp", null);
 
-    if (requestedHostApp) {
-        console.log(`Setting host app to ${requestedHostApp}`);
-
-        hostContainerPicker.value = requestedHostApp;
+    if (!requestedHostApp) {
+        requestedHostApp = hostContainerOptions[0].name;
     }
+
+    console.log(`Setting host app to ${requestedHostApp}`);
+
+    hostContainerPicker.value = requestedHostApp;
+
+    hostContainerPickerChanged();
 }
 
 function setupFilePicker() {
@@ -329,20 +263,20 @@ function setupFilePicker() {
     document.getElementById("filePicker").addEventListener("change", filePickerChanged);
 }
 
-function actionExecuted(action: Adaptive.Action) {
+function actionExecuted(action: AdaptiveCards.Action) {
     var message: string = "Action executed\n";
     message += "    Title: " + action.title + "\n";
 
-    if (action instanceof Adaptive.OpenUrlAction) {
+    if (action instanceof AdaptiveCards.OpenUrlAction) {
         message += "    Type: OpenUrl\n";
-        message += "    Url: " + (<Adaptive.OpenUrlAction>action).url + "\n";
+        message += "    Url: " + (<AdaptiveCards.OpenUrlAction>action).url + "\n";
     }
-    else if (action instanceof Adaptive.SubmitAction) {
+    else if (action instanceof AdaptiveCards.SubmitAction) {
         message += "    Type: Submit";
-        message += "    Data: " + JSON.stringify((<Adaptive.SubmitAction>action).data);
+        message += "    Data: " + JSON.stringify((<AdaptiveCards.SubmitAction>action).data);
     }
-    else if (action instanceof Adaptive.HttpAction) {
-        var httpAction = <Adaptive.HttpAction>action;
+    else if (action instanceof AdaptiveCards.HttpAction) {
+        var httpAction = <AdaptiveCards.HttpAction>action;
         message += "    Type: Http\n";
         message += "    Url: " + httpAction.url + "\n";
         message += "    Method: " + httpAction.method + "\n";
@@ -354,8 +288,8 @@ function actionExecuted(action: Adaptive.Action) {
 
         message += "    Body: " + httpAction.body + "\n";
     }
-    else if (action instanceof Adaptive.ShowCardAction) {
-        showPopupCard(<Adaptive.ShowCardAction>action);
+    else if (action instanceof AdaptiveCards.ShowCardAction) {
+        showPopupCard(<AdaptiveCards.ShowCardAction>action);
         return;
     }
     else {
@@ -376,14 +310,14 @@ function actionExecuted(action: Adaptive.Action) {
                 }
             ]
         });
-
+ 
     window.setTimeout(actionCompletedCallback, 2000, action);
     */
-    
+
     alert(message);
 }
 
-function actionCompletedCallback(action: Adaptive.Action) {
+function actionCompletedCallback(action: AdaptiveCards.Action) {
     action.setStatus(
         {
             "type": "AdaptiveCard",
@@ -398,7 +332,7 @@ function actionCompletedCallback(action: Adaptive.Action) {
         });
 }
 
-function showPopupCard(action: Adaptive.ShowCardAction) {
+function showPopupCard(action: AdaptiveCards.ShowCardAction) {
     var overlayElement = document.createElement("div");
     overlayElement.id = "popupOverlay";
     overlayElement.className = "popupOverlay";
@@ -413,17 +347,15 @@ function showPopupCard(action: Adaptive.ShowCardAction) {
     cardContainer.className = "popupCardContainer";
     cardContainer.onclick = (e) => { e.stopPropagation() };
 
-    var hostContainer = getSelectedHostContainer();
-
-    cardContainer.appendChild(hostContainer.render(action.card.render(), action.card.renderSpeech()));
-
-    overlayElement.appendChild(cardContainer);
-
-    document.body.appendChild(overlayElement);
-
     var cardContainerBounds = cardContainer.getBoundingClientRect();
     cardContainer.style.left = (window.innerWidth - cardContainerBounds.width) / 2 + "px";
     cardContainer.style.top = (window.innerHeight - cardContainerBounds.height) / 2 + "px";
+
+    overlayElement.appendChild(cardContainer);
+    document.body.appendChild(overlayElement);
+
+    var hostContainer = getSelectedHostContainer();
+    hostContainer.render(action.card, cardContainer);
 }
 
 function showValidationErrors() {
@@ -450,8 +382,8 @@ function switchToCardEditor() {
     document.getElementById("editCard").classList.remove("subdued");
     document.getElementById("editConfig").classList.add("subdued");
 
-    setEditorText(currentCardPayload);
-    editor.focus();
+    monacoEditor.setValue(currentCardPayload);
+    monacoEditor.focus();
 }
 
 function switchToConfigEditor() {
@@ -460,59 +392,31 @@ function switchToConfigEditor() {
     document.getElementById("editCard").classList.add("subdued");
     document.getElementById("editConfig").classList.remove("subdued");
 
-    setEditorText(currentConfigPayload);
-    editor.focus();
+    monacoEditor.setValue(currentConfigPayload);
+    monacoEditor.focus();
 }
 
-function inlineCardExpanded(action: Adaptive.ShowCardAction, isExpanded: boolean) {
+function inlineCardExpanded(action: AdaptiveCards.ShowCardAction, isExpanded: boolean) {
     alert("Card \"" + action.title + "\" " + (isExpanded ? "expanded" : "collapsed"));
 }
 
-function elementVisibilityChanged(element: Adaptive.CardElement) {
+function elementVisibilityChanged(element: AdaptiveCards.CardElement) {
     alert("An element is now " + (element.isVisible ? "visible" : "invisible"));
 }
 
-export class ToggleVisibilityAction extends Adaptive.Action {
-    targetElementIds: Array<string> = [];
+declare var monacoEditor: any;
 
-    getJsonTypeName(): string {
-        return "Action.ToggleVisibility";
-    }
+// Monaco loads asynchronously via a call to require() from index.html
+// App initialization needs to happen after.
+declare function loadMonacoEditor(schema: any, callback: () => void);
 
-    execute() {
-        if (this.targetElementIds) {
-            for (var i = 0; i < this.targetElementIds.length; i++) {
-                var targetElement = this.parent.getRootElement().getElementById(this.targetElementIds[i]);
-
-                if (targetElement) {
-                    targetElement.isVisible = !targetElement.isVisible;
-                }
-            }
-        }
-    }
-
-    parse(json: any) {
-        super.parse(json);
-
-        this.targetElementIds = json["targetElementIds"] as Array<string>;
-    }
-}
-
-var betaFeaturesEnabled: boolean = false;
-
-window.onload = () => {
-    betaFeaturesEnabled = location.search.indexOf("beta=true") >= 0;
-
-    Adaptive.AdaptiveCard.onParseElement = (element: Adaptive.CardElement, json: any) => {
+function monacoEditorLoaded() {
+    AdaptiveCards.AdaptiveCard.onParseElement = (element: AdaptiveCards.CardElement, json: any) => {
         getSelectedHostContainer().parseElement(element, json);
     }
 
-    Adaptive.AdaptiveCard.onAnchorClicked = (anchor: HTMLAnchorElement) => {
-        return getSelectedHostContainer().anchorClicked(anchor);
-    }
-
-    if (betaFeaturesEnabled) {
-        Adaptive.AdaptiveCard.actionTypeRegistry.registerType("Action.ToggleVisibility", () => { return new ToggleVisibilityAction(); });        
+    AdaptiveCards.AdaptiveCard.onAnchorClicked = (rootCard: AdaptiveCards.AdaptiveCard, anchor: HTMLAnchorElement) => {
+        return getSelectedHostContainer().anchorClicked(rootCard, anchor);
     }
 
     currentConfigPayload = Constants.defaultConfigPayload;
@@ -525,12 +429,12 @@ window.onload = () => {
         switchToConfigEditor();
     };
 
-    Adaptive.AdaptiveCard.onExecuteAction = actionExecuted;
+    AdaptiveCards.AdaptiveCard.onExecuteAction = actionExecuted;
     // Adaptive.AdaptiveCard.onShowPopupCard = showPopupCard;
 
     /*
     Test additional events:
-
+ 
     Adaptive.AdaptiveCard.onInlineCardExpanded = inlineCardExpanded;
     Adaptive.AdaptiveCard.onElementVisibilityChanged = elementVisibilityChanged;
     */
@@ -538,19 +442,14 @@ window.onload = () => {
     // Uncomment to test the onInlineCardExpanded event:
     // Adaptive.AdaptiveCard.onInlineCardExpanded = inlineCardExpanded;
 
-    Adaptive.AdaptiveCard.onParseError = (error: Adaptive.IValidationError) => {
+    AdaptiveCards.AdaptiveCard.onParseError = (error: AdaptiveCards.IValidationError) => {
         lastValidationErrors.push(error);
     }
-
-    hostContainerPicker = <HTMLSelectElement>document.getElementById("hostContainerPicker");
 
     setupContainerPicker();
     setContainerAppFromUrl();
     setupFilePicker();
     loadStyleSheetAndConfig();
-    setupEditor();
-
-    switchToCardEditor();
 
     // Handle Back and Forward after the Container app drop down is changed
     window.addEventListener(
@@ -558,4 +457,71 @@ window.onload = () => {
         function (e) {
             setContainerAppFromUrl();
         });
+
+    monacoEditor.onDidChangeModelContent(
+        function (e) {
+            if (isCardEditor) {
+                currentCardPayload = monacoEditor.getValue();
+            }
+            else {
+                currentConfigPayload = monacoEditor.getValue();
+            }
+
+            tryRenderCard();
+        });
+
+    currentCardPayload = Constants.defaultPayload;
+
+    var initialCardLaodedAsynchronously = false;
+    var cardUrl = getParameterByName("card", null);
+
+    if (cardUrl) {
+        initialCardLaodedAsynchronously = true;
+
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onload = function () {
+            if (xhttp.responseText && xhttp.responseText != "") {
+                currentCardPayload = xhttp.responseText;
+            }
+
+            switchToCardEditor();
+        };
+
+        try {
+            xhttp.open("GET", cardUrl, true);
+            xhttp.send();
+        }
+        catch {
+            initialCardLaodedAsynchronously = false;
+        }
+    }
+    else {
+        var cachedPayload;
+
+        try {
+            console.log("loading card from cache");
+            cachedPayload = sessionStorage.getItem("AdaptivePayload");
+        }
+        catch {
+            // Session storage is not accessible
+            console.log("Unable to load card from cache");
+        }
+
+        if (cachedPayload && cachedPayload != "") {
+            currentCardPayload = cachedPayload;
+        }
+    }
+
+    if (!initialCardLaodedAsynchronously) {
+        switchToCardEditor();
+    }
+}
+
+window.onload = () => {
+    AdaptiveCards.AdaptiveCard.processMarkdown = (text: string) => {
+        return new MarkdownIt().render(text);
+    }
+
+    loadMonacoEditor(adaptiveCardSchema, monacoEditorLoaded);
 };

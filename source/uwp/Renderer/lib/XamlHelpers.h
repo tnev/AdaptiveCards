@@ -1,9 +1,8 @@
 #pragma once
 
-#include "AdaptiveCards.Uwp.h"
+#include "AdaptiveCards.Rendering.Uwp.h"
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     class XamlHelpers
     {
     public:
@@ -126,4 +125,4 @@ namespace AdaptiveCards { namespace Uwp
             THROW_IF_FAILED(contentControl->put_Content(content.Get()));
         }
     };
-}}
+AdaptiveNamespaceEnd

@@ -1,13 +1,15 @@
+#include "pch.h"
 #include "ParseUtil.h"
 #include "TextInput.h"
 
-using namespace AdaptiveCards;
+using namespace AdaptiveSharedNamespace;
 
 TextInput::TextInput() :
     BaseInputElement(CardElementType::TextInput),
     m_isMultiline(false),
     m_maxLength(0)
 {
+    PopulateKnownPropertiesSet();
 }
 
 Json::Value TextInput::SerializeToJsonValue()
@@ -63,12 +65,12 @@ void TextInput::SetMaxLength(const unsigned int value)
     m_maxLength = value;
 }
 
-TextInputStyle AdaptiveCards::TextInput::GetTextInputStyle() const
+TextInputStyle TextInput::GetTextInputStyle() const
 {
     return m_style;
 }
 
-void AdaptiveCards::TextInput::SetTextInputStyle(const TextInputStyle value)
+void TextInput::SetTextInputStyle(const TextInputStyle value)
 {
     m_style = value;
 }
@@ -97,4 +99,13 @@ std::shared_ptr<BaseCardElement> TextInputParser::DeserializeFromString(
     const std::string& jsonString)
 {
     return TextInputParser::Deserialize(elementParserRegistration, actionParserRegistration, ParseUtil::GetJsonValueFromString(jsonString));
+}
+
+void TextInput::PopulateKnownPropertiesSet() 
+{
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Placeholder));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Value));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::IsMultiline));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::MaxLength));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::TextInput));
 }

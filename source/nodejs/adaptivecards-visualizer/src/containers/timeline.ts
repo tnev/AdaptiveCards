@@ -1,5 +1,6 @@
 import { HostContainer } from "./host-container";
 import {
+    AdaptiveCard,
     HostConfig,
     Size,
     TextSize,
@@ -25,18 +26,30 @@ export class TimelineContainer extends HostContainer {
         this.supportsActionBar = false;
     }
 
-    protected renderContainer(renderedCard: HTMLElement): HTMLElement {
-        var element = document.createElement("div");
-        element.style.width = this._width + "px";
-        element.style.height = this._height + "px";
-        // element.style.backgroundColor = TimelineContainer.backgroundColor;
-        element.style.overflow = "hidden";
+    protected renderContainer(adaptiveCard: AdaptiveCard, target: HTMLElement): HTMLElement {
+        AdaptiveCard.useAdvancedCardBottomTruncation = true;
 
+        var wrapper = document.createElement("div");
+        wrapper.className = "timeline-frame";
+        target.appendChild(wrapper);
+
+        var cardContainer = document.createElement("div");
+        cardContainer.className = "timeline-card"; 
+        wrapper.appendChild(cardContainer);
+
+        // Style must be set in code for fixed-height clipping to work
+        var clippingDiv = document.createElement("div");
+        clippingDiv.style.height = this._height + "px";
+        clippingDiv.style.width = this._width + "px";
+        clippingDiv.style.overflow = "hidden";
+        cardContainer.appendChild(clippingDiv);
+
+        var renderedCard = adaptiveCard.render();
         renderedCard.style.height = "100%";
-
-        element.appendChild(renderedCard);
-
-        return element;
+        clippingDiv.appendChild(renderedCard);
+        adaptiveCard.updateLayout();
+        
+        return wrapper;
     }
 
     public getHostConfig(): HostConfig {
@@ -70,50 +83,50 @@ export class TimelineContainer extends HostContainer {
             containerStyles: {
                 default: {
                     backgroundColor: "#535454",
-                    fontColors: {
+                    foregroundColors: {
                         default: {
-                            "normal": "#FFFFFF",
+                            "default": "#FFFFFF",
                             "subtle": "#9C9E9F"
                         },
                         accent: {
-                            "normal": "#2E89FC",
+                            "default": "#2E89FC",
                             "subtle": "#882E89FC"
                         },
                         attention: {
-                            "normal": "#FF0000",
+                            "default": "#FF0000",
                             "subtle": "#DDFF0000"
                         },
                         good: {
-                            "normal": "#00FF00",
+                            "default": "#00FF00",
                             "subtle": "#DD00FF00"
                         },
                         warning: {
-                            "normal": "#FFD800",
+                            "default": "#FFD800",
                             "subtle": "#DDFFD800"
                         }
                     }
                 },
                 emphasis: {
                     backgroundColor: "#33000000",
-                    fontColors: {
+                    foregroundColors: {
                         default: {
-                            "normal": "#FFFFFF",
+                            "default": "#FFFFFF",
                             "subtle": "#9C9E9F"
                         },
                         accent: {
-                            "normal": "#2E89FC",
+                            "default": "#2E89FC",
                             "subtle": "#882E89FC"
                         },
                         attention: {
-                            "normal": "#FF0000",
+                            "default": "#FF0000",
                             "subtle": "#DDFF0000"
                         },
                         good: {
-                            "normal": "#00FF00",
+                            "default": "#00FF00",
                             "subtle": "#DD00FF00"
                         },
                         warning: {
-                            "normal": "#FFD800",
+                            "default": "#FFD800",
                             "subtle": "#DDFFD800"
                         }
                     }

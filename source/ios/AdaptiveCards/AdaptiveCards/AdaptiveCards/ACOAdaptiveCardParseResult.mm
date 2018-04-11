@@ -9,12 +9,15 @@
 
 @implementation ACOAdaptiveCardParseResult
 
-- (instancetype)init
+- (instancetype)init:(ACOAdaptiveCard *)card errors:(NSArray<NSError *> *)errors warnings:(NSArray<ACRParseWarning *> *)warnings;
 {
     self = [super init];
     if(self)
     {
-        self.card = nil;
+        _card = card;
+        _isValid = (_card)? YES : NO;
+        _parseErrors = errors;
+        _parseWarnings = warnings;
     }
     return self;
 }

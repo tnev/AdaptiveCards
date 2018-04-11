@@ -2,20 +2,19 @@
 
 #include "pch.h"
 #include "Enums.h"
-#include "json\json.h"
+#include "json/json.h"
 
-namespace AdaptiveCards
-{
+AdaptiveSharedNamespaceStart
     class BaseCardElement;
     class ElementParserRegistration;
     class ActionParserRegistration;
 
-    class IBaseCardElementParser
+    class BaseCardElementParser
     {
     public:
         virtual std::shared_ptr<BaseCardElement> Deserialize(
-            std::shared_ptr<AdaptiveCards::ElementParserRegistration> elementParserRegistration,
-            std::shared_ptr<AdaptiveCards::ActionParserRegistration> actionParserRegistration,
+            std::shared_ptr<AdaptiveSharedNamespace::ElementParserRegistration> elementParserRegistration,
+            std::shared_ptr<AdaptiveSharedNamespace::ActionParserRegistration> actionParserRegistration,
             const Json::Value& value) = 0;
     };
 
@@ -25,12 +24,12 @@ namespace AdaptiveCards
 
         ElementParserRegistration();
 
-        void AddParser(std::string elementType, std::shared_ptr<AdaptiveCards::IBaseCardElementParser> parser);
+        void AddParser(std::string elementType, std::shared_ptr<AdaptiveSharedNamespace::BaseCardElementParser> parser);
         void RemoveParser(std::string elementType);
-        std::shared_ptr<AdaptiveCards::IBaseCardElementParser> GetParser(std::string elementType);
+        std::shared_ptr<AdaptiveSharedNamespace::BaseCardElementParser> GetParser(std::string elementType);
 
     private:
         std::unordered_set<std::string> m_knownElements;
-        std::unordered_map<std::string, std::shared_ptr<AdaptiveCards::IBaseCardElementParser>, CaseInsensitiveHash, CaseInsensitiveEqualTo> m_cardElementParsers;
+        std::unordered_map<std::string, std::shared_ptr<AdaptiveSharedNamespace::BaseCardElementParser>, CaseInsensitiveHash, CaseInsensitiveEqualTo> m_cardElementParsers;
     };
-}
+AdaptiveSharedNamespaceEnd

@@ -5,8 +5,7 @@
 #include "Enums.h"
 #include "ActionParserRegistration.h"
 
-namespace AdaptiveCards
-{
+AdaptiveSharedNamespaceStart
 class OpenUrlAction : public BaseActionElement
 {
 public:
@@ -16,12 +15,14 @@ public:
 
     std::string GetUrl() const;
     void SetUrl(const std::string value);
-    
+
 private:
+    void PopulateKnownPropertiesSet();
+
     std::string m_url;
 };
 
-class OpenUrlActionParser : public IActionElementParser
+class OpenUrlActionParser : public ActionElementParser
 {
     std::shared_ptr<BaseActionElement> Deserialize(
         std::shared_ptr<ElementParserRegistration> elementParserRegistration,
@@ -33,4 +34,4 @@ class OpenUrlActionParser : public IActionElementParser
         std::shared_ptr<ActionParserRegistration> actionParserRegistration,
         const std::string& jsonString);
 };
-}
+AdaptiveSharedNamespaceEnd

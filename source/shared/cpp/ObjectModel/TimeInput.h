@@ -5,8 +5,7 @@
 #include "Enums.h"
 #include "ElementParserRegistration.h"
 
-namespace AdaptiveCards
-{
+AdaptiveSharedNamespaceStart
 class TimeInput : public BaseInputElement
 {
 public:
@@ -27,13 +26,15 @@ public:
     void SetValue(const std::string value);
 
 private:
+    void PopulateKnownPropertiesSet();
+
     std::string m_max;
     std::string m_min;
     std::string m_placeholder;
     std::string m_value;
 };
 
-class TimeInputParser : public IBaseCardElementParser
+class TimeInputParser : public BaseCardElementParser
 {
 public:
     std::shared_ptr<BaseCardElement> Deserialize(
@@ -46,4 +47,4 @@ public:
         std::shared_ptr<ActionParserRegistration> actionParserRegistration,
         const std::string& jsonString);
 };
-}
+AdaptiveSharedNamespaceEnd

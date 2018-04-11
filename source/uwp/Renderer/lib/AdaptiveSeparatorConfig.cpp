@@ -2,10 +2,9 @@
 #include "AdaptiveSeparatorConfig.h"
 
 using namespace Microsoft::WRL;
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     HRESULT AdaptiveSeparatorConfig::RuntimeClassInitialize() noexcept try
     {
         SeparatorConfig separatorConfig;
@@ -46,5 +45,4 @@ namespace AdaptiveCards { namespace Uwp
         m_lineColor = color;
         return S_OK;
     }
-}
-}
+AdaptiveNamespaceEnd

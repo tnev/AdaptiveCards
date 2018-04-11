@@ -2,17 +2,15 @@
 #include "AdaptiveFact.h"
 #include "Util.h"
 #include <windows.foundation.collections.h>
-#include "AdaptiveCardRendererComponent.h"
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 using namespace ABI::Windows::Foundation::Collections;
 using namespace ABI::Windows::UI::Xaml;
 using namespace ABI::Windows::UI::Xaml::Controls;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     HRESULT AdaptiveFact::RuntimeClassInitialize() noexcept try
     {
         m_sharedFact = std::make_shared<Fact>();
@@ -20,7 +18,7 @@ namespace AdaptiveCards { namespace Uwp
     } CATCH_RETURN;
 
     _Use_decl_annotations_
-    HRESULT AdaptiveFact::RuntimeClassInitialize(const std::shared_ptr<AdaptiveCards::Fact>& sharedFact)
+    HRESULT AdaptiveFact::RuntimeClassInitialize(const std::shared_ptr<AdaptiveSharedNamespace::Fact>& sharedFact)
     {
         m_sharedFact = sharedFact;
         return S_OK;
@@ -63,10 +61,9 @@ namespace AdaptiveCards { namespace Uwp
         return S_OK;
     }
 
-    _Use_decl_annotations_
-    HRESULT AdaptiveFact::GetSharedModel(std::shared_ptr<AdaptiveCards::Fact>& sharedModel)
+    HRESULT AdaptiveFact::GetSharedModel(std::shared_ptr<AdaptiveSharedNamespace::Fact>& sharedModel)
     {
         sharedModel = m_sharedFact;
         return S_OK;
     }
-}}
+AdaptiveNamespaceEnd

@@ -1,10 +1,11 @@
+#include "pch.h"
 #include "BaseCardElement.h"
 #include "ShowCardAction.h"
 #include "OpenUrlAction.h"
 #include "ParseUtil.h"
 #include "SubmitAction.h"
 
-using namespace AdaptiveCards;
+using namespace AdaptiveSharedNamespace;
 
 BaseCardElement::BaseCardElement(
     CardElementType type,
@@ -12,17 +13,37 @@ BaseCardElement::BaseCardElement(
     bool separator) :
     m_type(type),
     m_spacing(spacing),
-    m_separator(separator)
+    m_separator(separator),
+    m_typeString(CardElementTypeToString(type))
 {
+    PopulateKnownPropertiesSet();
 }
 
 BaseCardElement::BaseCardElement(CardElementType type) :
-    m_type(type), m_spacing(Spacing::Default)
+    m_type(type), m_spacing(Spacing::Default), m_typeString(CardElementTypeToString(type))
+{
+    PopulateKnownPropertiesSet();
+}
+
+void BaseCardElement::PopulateKnownPropertiesSet()
+{
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Type));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Spacing));
+    m_knownProperties.insert(AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey::Separator));
+}
+
+BaseCardElement::~BaseCardElement()
 {
 }
 
-AdaptiveCards::BaseCardElement::~BaseCardElement()
+std::string BaseCardElement::GetElementTypeString() const
 {
+    return m_typeString;
+}
+
+void BaseCardElement::SetElementTypeString(const std::string value)
+{
+    m_typeString = value;
 }
 
 bool BaseCardElement::GetSeparator() const
@@ -55,7 +76,7 @@ void BaseCardElement::SetId(const std::string value)
     m_id = value;
 }
 
-const CardElementType AdaptiveCards::BaseCardElement::GetElementType() const
+const CardElementType BaseCardElement::GetElementType() const
 {
     return m_type;
 }
@@ -106,4 +127,14 @@ Json::Value BaseCardElement::SerializeSelectAction(const std::shared_ptr<BaseAct
         return selectAction->SerializeToJsonValue();
     }
     return Json::Value();
+}
+
+Json::Value BaseCardElement::GetAdditionalProperties()
+{
+    return m_additionalProperties;
+}
+
+void BaseCardElement::SetAdditionalProperties(Json::Value value)
+{
+    m_additionalProperties = value;
 }

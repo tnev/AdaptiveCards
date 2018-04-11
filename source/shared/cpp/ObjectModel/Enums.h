@@ -3,10 +3,12 @@
 
 #ifdef _WIN32
 #define strncasecmp _strnicmp
+#else
+#include <climits>
+#include <strings.h>
 #endif // _WIN32
 
-namespace AdaptiveCards
-{
+AdaptiveSharedNamespaceStart
 
 struct EnumHash
 {
@@ -78,6 +80,8 @@ enum class AdaptiveCardSchemaKey
     FontWeights,
     Good,
     HorizontalAlignment,
+    IconPlacement,
+    IconUrl,
     Id,
     Image,
     Images,
@@ -91,6 +95,7 @@ enum class AdaptiveCardSchemaKey
     IsSelected,
     IsSubtle,
     Items,
+    Language,
     Large,
     Left,
     Light,
@@ -106,7 +111,6 @@ enum class AdaptiveCardSchemaKey
     Medium,
     Method,
     Min,
-    MinVersion,
     NumberInput,
     Padding,
     Placeholder,
@@ -219,7 +223,8 @@ enum class CardElementType
     TextInput,
     TimeInput,
     ToggleInput,
-    Custom
+    Custom,
+    Unknown,
 };
 
 enum class ActionType
@@ -278,7 +283,6 @@ enum class ContainerStyle {
 
 enum class ErrorStatusCode {
     InvalidJson = 0,
-    UnsupportedSchemaVersion,
     RenderFailed,
     RequiredPropertyMissing,
     InvalidPropertyValue,
@@ -292,7 +296,22 @@ enum class WarningStatusCode {
     NoRendererForType,
     InteractivityNotSupported,
     MaxActionsExceeded,
-    AssetLoadFailed
+    AssetLoadFailed,
+    UnsupportedSchemaVersion,
+};
+
+enum class DateTimePreparsedTokenFormat {
+    RegularString = 0,
+    Time,
+    DateCompact,
+    DateShort,
+    DateLong
+};
+
+enum class IconPlacement
+{
+    AboveTitle = 0,
+    LeftOfTitle
 };
 
 const std::string AdaptiveCardSchemaKeyToString(AdaptiveCardSchemaKey type);
@@ -346,6 +365,9 @@ ContainerStyle ContainerStyleFromString(const std::string& style);
 const std::string ActionAlignmentToString(ActionAlignment alignment);
 ActionAlignment ActionAlignmentFromString(const std::string& alignment);
 
+const std::string IconPlacementToString(IconPlacement placement);
+IconPlacement IconPlacementFromString(const std::string& placement);
+
 template <typename T>
 const std::unordered_map<std::string, T, CaseInsensitiveHash, CaseInsensitiveEqualTo>
 GenerateStringToEnumMap(const std::unordered_map<T, std::string, EnumHash>& keyToStringMap)
@@ -357,4 +379,4 @@ GenerateStringToEnumMap(const std::unordered_map<T, std::string, EnumHash>& keyT
     }
     return result;
 }
-}
+AdaptiveSharedNamespaceEnd

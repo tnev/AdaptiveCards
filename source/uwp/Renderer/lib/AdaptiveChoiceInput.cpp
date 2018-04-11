@@ -2,17 +2,15 @@
 #include "AdaptiveChoiceInput.h"
 #include "Util.h"
 #include <windows.foundation.collections.h>
-#include "AdaptiveCardRendererComponent.h"
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 using namespace ABI::Windows::Foundation::Collections;
 using namespace ABI::Windows::UI::Xaml;
 using namespace ABI::Windows::UI::Xaml::Controls;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     HRESULT AdaptiveChoiceInput::RuntimeClassInitialize() noexcept try
     {
         m_sharedChoiceInput = std::make_shared<ChoiceInput>();
@@ -20,7 +18,7 @@ namespace AdaptiveCards { namespace Uwp
     } CATCH_RETURN;
 
     _Use_decl_annotations_
-    HRESULT AdaptiveChoiceInput::RuntimeClassInitialize(const std::shared_ptr<AdaptiveCards::ChoiceInput>& sharedChoiceInput)
+    HRESULT AdaptiveChoiceInput::RuntimeClassInitialize(const std::shared_ptr<AdaptiveSharedNamespace::ChoiceInput>& sharedChoiceInput)
     {
         m_sharedChoiceInput = sharedChoiceInput;
         return S_OK;
@@ -57,30 +55,15 @@ namespace AdaptiveCards { namespace Uwp
     }
 
     _Use_decl_annotations_
-    HRESULT AdaptiveChoiceInput::get_IsSelected(boolean* isSelected)
-    {
-        *isSelected = m_sharedChoiceInput->GetIsSelected();
-        return S_OK;
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveChoiceInput::put_IsSelected(boolean isSelected)
-    {
-        m_sharedChoiceInput->SetIsSelected(isSelected);
-        return S_OK;
-    }
-
-    _Use_decl_annotations_
     HRESULT AdaptiveChoiceInput::get_ElementType(ElementType* elementType)
     {
         *elementType = ElementType::ChoiceInput;
         return S_OK;
     }
 
-    _Use_decl_annotations_
-    HRESULT AdaptiveChoiceInput::GetSharedModel(std::shared_ptr<AdaptiveCards::ChoiceInput>& sharedModel)
+    HRESULT AdaptiveChoiceInput::GetSharedModel(std::shared_ptr<AdaptiveSharedNamespace::ChoiceInput>& sharedModel)
     {
         sharedModel = m_sharedChoiceInput;
         return S_OK;
     }
-}}
+AdaptiveNamespaceEnd

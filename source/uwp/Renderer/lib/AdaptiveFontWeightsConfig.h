@@ -1,17 +1,16 @@
 #pragma once
 
-#include "AdaptiveCards.Uwp.h"
+#include "AdaptiveCards.Rendering.Uwp.h"
 #include "Enums.h"
 #include "HostConfig.h"
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     class AdaptiveFontWeightsConfig :
         public Microsoft::WRL::RuntimeClass<
             Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::WinRtClassicComMix>,
-            ABI::AdaptiveCards::Uwp::IAdaptiveFontWeightsConfig>
+            ABI::AdaptiveNamespace::IAdaptiveFontWeightsConfig>
     {
-        InspectableClass(RuntimeClass_AdaptiveCards_Uwp_AdaptiveFontWeightsConfig, BaseTrust)
+        AdaptiveRuntime(AdaptiveFontWeightsConfig)
 
     public:
         HRESULT RuntimeClassInitialize() noexcept;
@@ -33,4 +32,4 @@ namespace AdaptiveCards { namespace Uwp
     };
 
     ActivatableClass(AdaptiveFontWeightsConfig);
-}}
+AdaptiveNamespaceEnd

@@ -9,11 +9,10 @@
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 using namespace ABI::Windows::Foundation;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     HRESULT AdaptiveTimeInputRenderer::RuntimeClassInitialize() noexcept try
     {
         return S_OK;
@@ -32,10 +31,10 @@ namespace AdaptiveCards { namespace Uwp
 
     HRESULT AdaptiveTimeInputRenderer::FromJson(
         ABI::Windows::Data::Json::IJsonObject* jsonObject,
-        ABI::AdaptiveCards::Uwp::IAdaptiveElementParserRegistration* elementParserRegistration,
-        ABI::AdaptiveCards::Uwp::IAdaptiveActionParserRegistration* actionParserRegistration,
-        ABI::AdaptiveCards::Uwp::IAdaptiveCardElement** element)
+        ABI::AdaptiveNamespace::IAdaptiveElementParserRegistration* elementParserRegistration,
+        ABI::AdaptiveNamespace::IAdaptiveActionParserRegistration* actionParserRegistration,
+        ABI::AdaptiveNamespace::IAdaptiveCardElement** element)
     {
-        return AdaptiveCards::Uwp::FromJson<AdaptiveCards::Uwp::AdaptiveTimeInput, AdaptiveCards::TimeInput, AdaptiveCards::TimeInputParser>(jsonObject, elementParserRegistration, actionParserRegistration, element);
+        return AdaptiveNamespace::FromJson<AdaptiveNamespace::AdaptiveTimeInput, AdaptiveSharedNamespace::TimeInput, AdaptiveSharedNamespace::TimeInputParser>(jsonObject, elementParserRegistration, actionParserRegistration, element);
     }
-}}
+AdaptiveNamespaceEnd

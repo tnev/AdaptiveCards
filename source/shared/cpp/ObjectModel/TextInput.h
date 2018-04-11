@@ -5,8 +5,7 @@
 #include "Enums.h"
 #include "ElementParserRegistration.h"
 
-namespace AdaptiveCards
-{
+AdaptiveSharedNamespaceStart
 class TextInput : public BaseInputElement
 {
 public:
@@ -30,6 +29,8 @@ public:
     void SetTextInputStyle(const TextInputStyle value);
 
 private:
+    void PopulateKnownPropertiesSet();
+
     std::string m_placeholder;
     std::string m_value;
     bool m_isMultiline;
@@ -37,7 +38,7 @@ private:
     TextInputStyle m_style;
 };
 
-class TextInputParser : public IBaseCardElementParser
+class TextInputParser : public BaseCardElementParser
 {
 public:
     std::shared_ptr<BaseCardElement> Deserialize(
@@ -50,4 +51,4 @@ public:
         std::shared_ptr<ActionParserRegistration> actionParserRegistration,
         const std::string& jsonString);
 };
-}
+AdaptiveSharedNamespaceEnd

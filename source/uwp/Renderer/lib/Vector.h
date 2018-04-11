@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AdaptiveCards.Uwp.h"
+#include "AdaptiveCards.Rendering.Uwp.h"
 #include <windows.foundation.collections.h>
 #include <wrl.h>
 
@@ -8,8 +8,7 @@ using namespace ABI::Windows::Foundation::Collections;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     template <typename T>
     struct Wrap
     {
@@ -62,7 +61,7 @@ namespace AdaptiveCards { namespace Uwp
     template <class T>
     class Iterator : public RuntimeClass<IIterator<T>>
     {
-        InspectableClass(L"AdaptiveCards.AdaptiveCardReader.Iterator", BaseTrust)
+        AdaptiveRuntimeStringClass(Iterator)
 
     private:
         typedef typename std::vector<typename Wrap<T>::type> WrappedVector;
@@ -147,7 +146,7 @@ namespace AdaptiveCards { namespace Uwp
         IIterable<T>,
         Microsoft::WRL::FtmBase>
     {
-        InspectableClass(L"AdaptiveCards.AdaptiveCardReader.Vector", BaseTrust)
+        AdaptiveRuntimeStringClass(Vector)
 
     private:
         typedef typename std::vector<typename Wrap<T>::type> WrappedVector;
@@ -261,4 +260,4 @@ namespace AdaptiveCards { namespace Uwp
     private:
         std::shared_ptr<WrappedVector> m_wrappedVector;
     };
-}}
+AdaptiveNamespaceEnd

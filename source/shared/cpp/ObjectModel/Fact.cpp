@@ -1,7 +1,8 @@
+#include "pch.h"
 #include "Fact.h"
 #include "ParseUtil.h"
 
-using namespace AdaptiveCards;
+using namespace AdaptiveSharedNamespace;
 
 Fact::Fact()
 {

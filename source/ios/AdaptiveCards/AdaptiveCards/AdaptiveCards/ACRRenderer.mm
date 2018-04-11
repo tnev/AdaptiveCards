@@ -6,6 +6,7 @@
 //
 #import "ACOAdaptiveCardPrivate.h"
 #import "ACOBaseActionElementPrivate.h"
+#import "ACOBaseCardElementPrivate.h"
 #import "ACOHostConfigPrivate.h"
 #import "ACRBaseCardElementRenderer.h"
 #import "ACRBaseActionElementRenderer.h"
@@ -14,6 +15,7 @@
 #import "ACRRegistration.h"
 #import "ACRRendererPrivate.h"
 #import "ACRSeparator.h"
+#import "ACRViewPrivate.h"
 #import "ACRViewController.h"
 
 using namespace AdaptiveCards;
@@ -26,107 +28,116 @@ using namespace AdaptiveCards;
     return self;
 }
 
-+ (ACRRenderResult *)render:(ACOAdaptiveCard *)card config:(ACOHostConfig *)config frame:(CGRect)frame
+// This interface is exposed to outside, and returns ACRRenderResult object
+// This object contains a viewController instance which defer rendering adaptiveCard untill viewDidLoad is called.
++ (ACRRenderResult *)render:(ACOAdaptiveCard *)card config:(ACOHostConfig *)config widthConstraint:(float)width
 {
     ACRRenderResult *result = [[ACRRenderResult alloc] init];
+    // Initializes ACRView instance with HostConfig and AdaptiveCard
+    // ACRViewController does not render adaptiveCard untill viewDidLoad calls render
+    ACRView *view = [[ACRView alloc] init:card hostconfig:config widthConstraint:width];
+    result.view = view;
+    result.succeeded = YES;
+    return result;
+}
 
-    ACRViewController *viewcontroller = [[ACRViewController alloc] init:card
-                                                             hostconfig:config
-                                                                  frame:frame];
-
+// This interface is exposed to outside, and returns ACRRenderResult object
+// This object contains a viewController instance which defer rendering adaptiveCard untill viewDidLoad is called.
++ (ACRRenderResult *)renderAsViewController:(ACOAdaptiveCard *)card config:(ACOHostConfig *)config frame:(CGRect)frame delegate:(id<ACRActionDelegate>)acrActionDelegate
+{
+    ACRRenderResult *result = [[ACRRenderResult alloc] init];
+    // Initializes ACRView instance with HostConfig and AdaptiveCard
+    // ACRView does not render adaptiveCard untill viewDidLoad calls render
+    ACRViewController *viewcontroller = [[ACRViewController alloc] init:card hostconfig:config frame:frame delegate:acrActionDelegate];
     result.viewcontroller = viewcontroller;
     result.succeeded = YES;
     return result;
 }
 
+// transforms (i.e. renders) an adaptiveCard to a new UIView instance
 + (UIView *)renderWithAdaptiveCards:(std::shared_ptr<AdaptiveCard> const &)adaptiveCard
                              inputs:(NSMutableArray *)inputs
-                     viewController:(UIViewController *)vc
-                         guideFrame:(CGRect)guideFrame
-                         hostconfig:(std::shared_ptr<HostConfig> const &)config
+                            context:(ACRView *)rootView
+                     containingView:(ACRColumnView *)containingView
+                         hostconfig:(ACOHostConfig *)config
 {
     std::vector<std::shared_ptr<BaseCardElement>> body = adaptiveCard->GetBody();
-
-    ACRColumnView *verticalView = nil;
-
+    ACRColumnView *verticalView = containingView;
+    
     if(!body.empty())
     {
-         verticalView = [[ACRColumnView alloc] initWithFrame:CGRectMake(0, 0, guideFrame.size.width, guideFrame.size.height)];
+        [rootView addTasksToConcurrentQueue:body];
+        ACRContainerStyle style = ([config getHostConfig]->adaptiveCard.allowCustomStyle)? (ACRContainerStyle)adaptiveCard->GetStyle() : ACRDefault;
+        style = (style == ACRNone)? ACRDefault : style;
+        [verticalView setStyle:style];
 
-        [ACRRenderer render:verticalView inputs:inputs withCardElems:body andHostConfig:config];
+        [ACRRenderer render:verticalView rootView:rootView inputs:inputs withCardElems:body andHostConfig:config];
+
+        [[rootView card] setInputs:inputs];
 
         std::vector<std::shared_ptr<BaseActionElement>> actions = adaptiveCard->GetActions();
+        [rootView addActionsToConcurrentQueue:actions];
 
-        [ACRSeparator renderActionsSeparator:verticalView hostConfig:config];
-
-        UIView<ACRIContentHoldingView> *actionChildView = [ACRRenderer renderButton:vc inputs:inputs superview:verticalView actionElems:actions hostConfig:config];
-        [verticalView addArrangedSubview:actionChildView];
+        [ACRSeparator renderActionsSeparator:verticalView hostConfig:[config getHostConfig]];
+        // renders buttons and their associated actions
+        [ACRRenderer renderButton:rootView inputs:inputs superview:verticalView actionElems:actions hostConfig:config];
     }
+    
     return verticalView;
 }
 
-+ (UIView<ACRIContentHoldingView> *)renderButton:(UIViewController *)vc
++ (UIView<ACRIContentHoldingView> *)renderButton:(ACRView *)rootView
                                           inputs:(NSMutableArray *)inputs
                                        superview:(UIView<ACRIContentHoldingView> *)superview
                                      actionElems:(std::vector<std::shared_ptr<BaseActionElement>> const &)elems
-                                      hostConfig:(std::shared_ptr<HostConfig> const &)config
+                                      hostConfig:(ACOHostConfig *)config
 {
     ACRRegistration *reg = [ACRRegistration getInstance];
     UIView<ACRIContentHoldingView> *childview = nil;
     UILayoutConstraintAxis axis = UILayoutConstraintAxisVertical;
-    if(ActionsOrientation::Horizontal == config->actions.actionsOrientation)
-    {
+    if(ActionsOrientation::Horizontal == [config getHostConfig]->actions.actionsOrientation){
         childview = [[ACRColumnSetView alloc] initWithFrame:CGRectMake(0, 0, superview.frame.size.width, superview.frame.size.height)];
         axis = UILayoutConstraintAxisHorizontal;
     }
-    else
-    {
+    else{
         childview = [[ACRColumnView alloc] initWithFrame:CGRectMake(0, 0, superview.frame.size.width, superview.frame.size.height)];
     }
 
     ACOBaseActionElement *acoElem = [[ACOBaseActionElement alloc] init];
-    ACOHostConfig *acoConfig = [[ACOHostConfig alloc] init];
+    [superview addArrangedSubview:childview];
 
-    for(const auto &elem:elems)
-    {
+    for(const auto &elem:elems){
         ACRBaseActionElementRenderer *actionRenderer =
         [reg getActionRenderer:[NSNumber numberWithInt:(int)elem->GetElementType()]];
 
-        if(actionRenderer == nil)
-        {
+        if(actionRenderer == nil){
             NSLog(@"Unsupported card action type:%d\n", (int) elem->GetElementType());
             continue;
         }
 
         [acoElem setElem:elem];
-        [acoConfig setHostConfig:config];
-
-        UIButton* button = [actionRenderer renderButton:vc
-                                                 inputs:inputs
-                                              superview:superview
-                                      baseActionElement:acoElem
-                                             hostConfig:acoConfig];
+        UIButton *button = [actionRenderer renderButton:rootView inputs:inputs superview:superview baseActionElement:acoElem hostConfig:config];
         [childview addArrangedSubview:button];
-
-        [ACRSeparator renderSeparationWithFrame:CGRectMake(0,0,config->actions.buttonSpacing, config->actions.buttonSpacing)
+        [ACRSeparator renderSeparationWithFrame:CGRectMake(0,0,[config getHostConfig]->actions.buttonSpacing, [config getHostConfig]->actions.buttonSpacing)
                                       superview:childview axis:axis];
     }
 
     [childview adjustHuggingForLastElement];
-
     return childview;
 }
 
 + (UIView *)render:(UIView<ACRIContentHoldingView> *)view
+          rootView:(ACRView *)rootView
             inputs:(NSMutableArray *)inputs
      withCardElems:(std::vector<std::shared_ptr<BaseCardElement>> const &)elems
-     andHostConfig:(std::shared_ptr<HostConfig> const &)config
+     andHostConfig:(ACOHostConfig *)config
 {
     ACRRegistration *reg = [ACRRegistration getInstance];
+    ACOBaseCardElement *acoElem = [[ACOBaseCardElement alloc] init];
 
     for(const auto &elem:elems)
     {
-        [ACRSeparator renderSeparation:elem forSuperview:view withHostConfig:config];
+        [ACRSeparator renderSeparation:elem forSuperview:view withHostConfig:[config getHostConfig]];
 
         ACRBaseCardElementRenderer *renderer =
             [reg getRenderer:[NSNumber numberWithInt:(int)elem->GetElementType()]];
@@ -137,7 +148,8 @@ using namespace AdaptiveCards;
             continue;
         }
 
-        [renderer render:view inputs:inputs withCardElem:elem andHostConfig:config];
+        [acoElem setElem:elem];
+        [renderer render:view rootView:rootView inputs:inputs baseCardElement:acoElem hostConfig:config];
     }
 
     return view;

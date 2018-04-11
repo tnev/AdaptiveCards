@@ -4,17 +4,15 @@
 #include "Util.h"
 #include "Vector.h"
 #include <windows.foundation.collections.h>
-#include "AdaptiveCardRendererComponent.h"
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 using namespace ABI::Windows::Foundation::Collections;
 using namespace ABI::Windows::UI::Xaml;
 using namespace ABI::Windows::UI::Xaml::Controls;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     AdaptiveContainer::AdaptiveContainer()
     {
         m_items = Microsoft::WRL::Make<Vector<IAdaptiveCardElement*>>();
@@ -22,12 +20,12 @@ namespace AdaptiveCards { namespace Uwp
 
     HRESULT AdaptiveContainer::RuntimeClassInitialize() noexcept try
     {
-        std::shared_ptr<AdaptiveCards::Container> container = std::make_shared<AdaptiveCards::Container>();
+        std::shared_ptr<AdaptiveSharedNamespace::Container> container = std::make_shared<AdaptiveSharedNamespace::Container>();
         return RuntimeClassInitialize(container);
     } CATCH_RETURN;
 
     _Use_decl_annotations_
-    HRESULT AdaptiveContainer::RuntimeClassInitialize(const std::shared_ptr<AdaptiveCards::Container>& sharedContainer)
+    HRESULT AdaptiveContainer::RuntimeClassInitialize(const std::shared_ptr<AdaptiveSharedNamespace::Container>& sharedContainer) try
     {
         if (sharedContainer == nullptr)
         {
@@ -36,14 +34,11 @@ namespace AdaptiveCards { namespace Uwp
 
         GenerateContainedElementsProjection(sharedContainer->GetItems(), m_items.Get());
         GenerateActionProjection(sharedContainer->GetSelectAction(), &m_selectAction);
-        m_style = static_cast<ABI::AdaptiveCards::Uwp::ContainerStyle>(sharedContainer->GetStyle());
+        m_style = static_cast<ABI::AdaptiveNamespace::ContainerStyle>(sharedContainer->GetStyle());
         
-        m_spacing = static_cast<ABI::AdaptiveCards::Uwp::Spacing>(sharedContainer->GetSpacing());
-        m_separator = sharedContainer->GetSeparator();
-        RETURN_IF_FAILED(UTF8ToHString(sharedContainer->GetId(), m_id.GetAddressOf()));
-
+        InitializeBaseElement(std::static_pointer_cast<BaseCardElement>(sharedContainer));
         return S_OK;
-    }
+    } CATCH_RETURN;
 
     _Use_decl_annotations_
     HRESULT AdaptiveContainer::get_Items(IVector<IAdaptiveCardElement*>** items)
@@ -72,93 +67,23 @@ namespace AdaptiveCards { namespace Uwp
     }
 
     _Use_decl_annotations_
-    HRESULT AdaptiveContainer::get_Style(ABI::AdaptiveCards::Uwp::ContainerStyle* style)
+    HRESULT AdaptiveContainer::get_Style(ABI::AdaptiveNamespace::ContainerStyle* style)
     {
         *style = m_style;
         return S_OK;
     }
 
     _Use_decl_annotations_
-    HRESULT AdaptiveContainer::put_Style(ABI::AdaptiveCards::Uwp::ContainerStyle style)
+    HRESULT AdaptiveContainer::put_Style(ABI::AdaptiveNamespace::ContainerStyle style)
     {
         m_style = style;
         return S_OK;
     }
 
-    _Use_decl_annotations_
-    HRESULT AdaptiveContainer::get_Spacing(ABI::AdaptiveCards::Uwp::Spacing* spacing)
+    HRESULT AdaptiveContainer::GetSharedModel(std::shared_ptr<AdaptiveSharedNamespace::BaseCardElement>& sharedModel) try
     {
-        *spacing = m_spacing;
-        return S_OK;
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveContainer::put_Spacing(ABI::AdaptiveCards::Uwp::Spacing spacing)
-    {
-        m_spacing = spacing;
-        return S_OK;
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveContainer::get_Separator(boolean* separator)
-    {
-        *separator = m_separator;
-        return S_OK;
-
-        //Issue #629 to make separator an object
-        //return GenerateSeparatorProjection(m_sharedContainer->GetSeparator(), separator);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveContainer::put_Separator(boolean separator)
-    {
-        m_separator = separator;
-
-        /*Issue #629 to make separator an object
-        std::shared_ptr<Separator> sharedSeparator;
-        RETURN_IF_FAILED(GenerateSharedSeparator(separator, &sharedSeparator));
-
-        m_sharedContainer->SetSeparator(sharedSeparator);
-        */
-
-        return S_OK;
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveContainer::get_Id(HSTRING* id)
-    {
-        return m_id.CopyTo(id);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveContainer::put_Id(HSTRING id)
-    {
-        return m_id.Set(id);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveContainer::get_ElementTypeString(HSTRING* type)
-    {
-        ElementType typeEnum;
-        RETURN_IF_FAILED(get_ElementType(&typeEnum));
-        return ProjectedElementTypeToHString(typeEnum, type);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveContainer::ToJson(ABI::Windows::Data::Json::IJsonObject** result)
-    {
-        std::shared_ptr<AdaptiveCards::Container> sharedModel;
-        RETURN_IF_FAILED(GetSharedModel(sharedModel));
-
-        return StringToJsonObject(sharedModel->Serialize(), result);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveContainer::GetSharedModel(std::shared_ptr<AdaptiveCards::Container>& sharedModel)
-    {
-        std::shared_ptr<AdaptiveCards::Container> container = std::make_shared<AdaptiveCards::Container>();
-
-        RETURN_IF_FAILED(SetSharedElementProperties(this, std::dynamic_pointer_cast<AdaptiveCards::BaseCardElement>(container)));
+        std::shared_ptr<AdaptiveSharedNamespace::Container> container = std::make_shared<AdaptiveSharedNamespace::Container>();
+        RETURN_IF_FAILED(SetSharedElementProperties(std::static_pointer_cast<AdaptiveSharedNamespace::BaseCardElement>(container)));
 
         if (m_selectAction != nullptr)
         {
@@ -167,12 +92,11 @@ namespace AdaptiveCards { namespace Uwp
             container->SetSelectAction(sharedAction);
         }
 
-        container->SetStyle(static_cast<AdaptiveCards::ContainerStyle>(m_style));
+        container->SetStyle(static_cast<AdaptiveSharedNamespace::ContainerStyle>(m_style));
 
         GenerateSharedElements(m_items.Get(), container->GetItems());
 
         sharedModel = container;
         return S_OK;
-    }
-}
-}
+    }CATCH_RETURN;
+AdaptiveNamespaceEnd

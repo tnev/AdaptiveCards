@@ -9,6 +9,8 @@
 #import "ACRContentHoldingUIView.h"
 #import "ACRNumericTextField.h"
 #import "NumberInput.h"
+#import "ACOHostConfigPrivate.h"
+#import "ACOBaseCardElementPrivate.h"
 
 @implementation ACRInputNumberRenderer
 
@@ -18,25 +20,37 @@
     return singletonInstance;
 }
 
-+ (CardElementType)elemType
++ (ACRCardElementType)elemType
 {
-    return CardElementType::NumberInput;
+    return ACRNumberInput;
 }
 
 - (UIView *)render:(UIView<ACRIContentHoldingView> *)viewGroup
+          rootView:(ACRView *)rootView
             inputs:(NSMutableArray *)inputs
-      withCardElem:(std::shared_ptr<BaseCardElement> const &)elem
-     andHostConfig:(std::shared_ptr<HostConfig> const &)config
+   baseCardElement:(ACOBaseCardElement *)acoElem
+        hostConfig:(ACOHostConfig *)acoConfig;
 {
+    std::shared_ptr<HostConfig> config = [acoConfig getHostConfig];
+    std::shared_ptr<BaseCardElement> elem = [acoElem element];
     std::shared_ptr<NumberInput> numInputBlck = std::dynamic_pointer_cast<NumberInput>(elem);
     ACRNumericTextField *numInput = [[ACRNumericTextField alloc] init];
-    NSString *placeHolderStr = [NSString stringWithFormat: @"%d", numInputBlck->GetValue()];
-    numInput.placeholder = placeHolderStr;
+    numInput.id = [NSString stringWithCString:numInputBlck->GetId().c_str()
+                                     encoding:NSUTF8StringEncoding];
+    numInput.placeholder = [NSString stringWithCString:numInputBlck->GetPlaceholder().c_str() encoding:NSUTF8StringEncoding];
+    numInput.text = [NSString stringWithFormat: @"%d", numInputBlck->GetValue()];
     numInput.allowsEditingTextAttributes = YES;
     numInput.borderStyle = UITextBorderStyleLine;
     numInput.keyboardType = UIKeyboardTypeNumberPad;
     numInput.min = numInputBlck->GetMin();
     numInput.max = numInputBlck->GetMax();
+    CGRect frame = CGRectMake(0, 0, viewGroup.frame.size.width, 30);
+    UIToolbar *toolBar = [[UIToolbar alloc] initWithFrame:frame];
+    UIBarButtonItem *flexSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+    UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:numInput action:@selector(dismissNumPad)];
+    [toolBar setItems:@[doneButton, flexSpace] animated:NO];
+    [toolBar sizeToFit];
+    numInput.inputAccessoryView = toolBar;
 
     [viewGroup addArrangedSubview: numInput];
 

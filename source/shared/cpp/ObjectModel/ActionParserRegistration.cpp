@@ -1,10 +1,10 @@
+#include "pch.h"
 #include "ActionParserRegistration.h"
 #include "OpenUrlAction.h"
 #include "ShowCardAction.h"
 #include "SubmitAction.h"
 
-namespace AdaptiveCards
-{
+AdaptiveSharedNamespaceStart
     ActionParserRegistration::ActionParserRegistration()
     {
         m_knownElements.insert({
@@ -20,7 +20,7 @@ namespace AdaptiveCards
         });
     }
 
-    void ActionParserRegistration::AddParser(std::string elementType, std::shared_ptr<IActionElementParser> parser)
+    void ActionParserRegistration::AddParser(std::string elementType, std::shared_ptr<ActionElementParser> parser)
     {
         if (m_knownElements.find(elementType) == m_knownElements.end())
         {
@@ -44,7 +44,7 @@ namespace AdaptiveCards
         }
     }
 
-    std::shared_ptr<IActionElementParser> ActionParserRegistration::GetParser(std::string elementType)
+    std::shared_ptr<ActionElementParser> ActionParserRegistration::GetParser(std::string elementType)
     {
         auto parser = m_cardElementParsers.find(elementType);
         if (parser != ActionParserRegistration::m_cardElementParsers.end())
@@ -53,7 +53,7 @@ namespace AdaptiveCards
         }
         else
         {
-            return std::shared_ptr<IActionElementParser>(nullptr);
+            return std::shared_ptr<ActionElementParser>(nullptr);
         }
     }
-}
+AdaptiveSharedNamespaceEnd

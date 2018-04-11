@@ -1,17 +1,16 @@
 #pragma once
 
-#include "AdaptiveCards.Uwp.h"
+#include "AdaptiveCards.Rendering.Uwp.h"
 #include "Enums.h"
 #include "HostConfig.h"
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     class AdaptiveSpacingConfig :
         public Microsoft::WRL::RuntimeClass<
             Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::RuntimeClassType::WinRtClassicComMix>,
-            ABI::AdaptiveCards::Uwp::IAdaptiveSpacingConfig>
+            ABI::AdaptiveNamespace::IAdaptiveSpacingConfig>
     {
-        InspectableClass(RuntimeClass_AdaptiveCards_Uwp_AdaptiveSpacingConfig, BaseTrust)
+        AdaptiveRuntime(AdaptiveSpacingConfig)
 
     public:
         HRESULT RuntimeClassInitialize() noexcept;
@@ -45,4 +44,4 @@ namespace AdaptiveCards { namespace Uwp
     };
 
     ActivatableClass(AdaptiveSpacingConfig);
-}}
+AdaptiveNamespaceEnd

@@ -10,6 +10,9 @@
 #import "ACRRendererPrivate.h"
 #import "Column.h"
 #import "SharedAdaptiveCard.h"
+#import "ACRLongPressGestureRecognizerFactory.h"
+#import "ACOHostConfigPrivate.h"
+#import "ACOBaseCardElementPrivate.h"
 
 @implementation ACRColumnRenderer
 
@@ -19,50 +22,53 @@
     return singletonInstance;
 }
 
-+ (CardElementType)elemType
++ (ACRCardElementType)elemType
 {
-    return CardElementType::Column;
+    return ACRColumn;
 }
 
 - (UIView *)render:(UIView<ACRIContentHoldingView> *)viewGroup
+          rootView:(ACRView *)rootView
             inputs:(NSMutableArray *)inputs
-      withCardElem:(std::shared_ptr<BaseCardElement> const &)elem
-     andHostConfig:(std::shared_ptr<HostConfig> const &)config
+   baseCardElement:(ACOBaseCardElement *)acoElem
+        hostConfig:(ACOHostConfig *)acoConfig;
 {
+    std::shared_ptr<BaseCardElement> elem = [acoElem element];
     std::shared_ptr<Column> columnElem = std::dynamic_pointer_cast<Column>(elem);
 
-    ContainerStyle style = ContainerStyle::Default;
-
-    // Not set; apply parent's style
-    if(columnElem->GetStyle() == ContainerStyle::None)
-    {
-        style = [viewGroup getStyle];
-    }
-    // apply elem's style if custom style is allowed
-    else if (config->adaptiveCard.allowCustomStyle)
-    {
-        style = columnElem->GetStyle();
-    }
-    else
-    {
-        style = ContainerStyle::Default;
-    }
-
-    ACRColumnView* column = [[ACRColumnView alloc] initWithStyle:style hostConfig:config];
-    [viewGroup addArrangedSubview:column];
+    ACRColumnView* column = [[ACRColumnView alloc] initWithStyle:(ACRContainerStyle)columnElem->GetStyle()
+                                                     parentStyle:[viewGroup style] hostConfig:acoConfig];
     [ACRRenderer render:column
+               rootView:rootView
                  inputs:inputs
           withCardElems:columnElem->GetItems()
-          andHostConfig:config];
+          andHostConfig:acoConfig];
+
+    [viewGroup addArrangedSubview:column];
 
     [column setContentHuggingPriority:UILayoutPriorityDefaultHigh forAxis:UILayoutConstraintAxisHorizontal];
     [column setClipsToBounds:TRUE];
-    if(columnElem->GetWidth() == "stretch")
+    if(columnElem->GetWidth() == "stretch" || columnElem->GetWidth() == "")
     {
         [column setContentHuggingPriority:UILayoutPriorityDefaultLow forAxis:UILayoutConstraintAxisHorizontal];
     }
 
     [column adjustHuggingForLastElement];
+
+    std::shared_ptr<BaseActionElement> selectAction = columnElem->GetSelectAction();
+    // instantiate and add tap gesture recognizer
+    UILongPressGestureRecognizer * gestureRecognizer =
+        [ACRLongPressGestureRecognizerFactory getLongPressGestureRecognizer:viewGroup
+                                                                   rootView:rootView
+                                                                 targetView:column
+                                                              actionElement:selectAction
+                                                                     inputs:inputs
+                                                                 hostConfig:acoConfig];
+    if(gestureRecognizer)
+    {
+        [column addGestureRecognizer:gestureRecognizer];
+        column.userInteractionEnabled = YES;
+    }
 
     return column;
 }

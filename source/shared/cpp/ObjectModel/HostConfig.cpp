@@ -2,7 +2,7 @@
 #include "HostConfig.h"
 #include "ParseUtil.h"
 
-using namespace AdaptiveCards;
+using namespace AdaptiveSharedNamespace;
 
 HostConfig HostConfig::DeserializeFromString(const std::string jsonString)
 {
@@ -13,7 +13,7 @@ HostConfig HostConfig::Deserialize(const Json::Value& json)
 {
     HostConfig result;
     std::string fontFamily = ParseUtil::GetString(json, AdaptiveCardSchemaKey::FontFamily);
-    result.fontFamily = fontFamily == "" ? fontFamily : result.fontFamily;
+    result.fontFamily = fontFamily != "" ? fontFamily : result.fontFamily;
 
     result.supportsInteractivity = ParseUtil::GetBool(
         json, AdaptiveCardSchemaKey::SupportsInteractivity, result.supportsInteractivity);
@@ -207,10 +207,13 @@ ActionsConfig ActionsConfig::Deserialize(const Json::Value& json, const ActionsC
     result.spacing = ParseUtil::GetEnumValue<Spacing>(
         json, AdaptiveCardSchemaKey::Spacing, defaultValue.spacing, SpacingFromString);
 
+    result.iconPlacement = ParseUtil::GetEnumValue<IconPlacement>(
+        json, AdaptiveCardSchemaKey::IconPlacement, defaultValue.iconPlacement, IconPlacementFromString);
+
     return result;
 }
 
-SpacingConfig AdaptiveCards::SpacingConfig::Deserialize(const Json::Value & json, const SpacingConfig & defaultValue)
+SpacingConfig SpacingConfig::Deserialize(const Json::Value & json, const SpacingConfig & defaultValue)
 {
     SpacingConfig result;
 
@@ -235,7 +238,7 @@ SpacingConfig AdaptiveCards::SpacingConfig::Deserialize(const Json::Value & json
     return result;
 }
 
-SeparatorConfig AdaptiveCards::SeparatorConfig::Deserialize(const Json::Value & json, const SeparatorConfig & defaultValue)
+SeparatorConfig SeparatorConfig::Deserialize(const Json::Value & json, const SeparatorConfig & defaultValue)
 {
     SeparatorConfig result;
 
@@ -248,12 +251,17 @@ SeparatorConfig AdaptiveCards::SeparatorConfig::Deserialize(const Json::Value & 
     return result;
 }
 
-ContainerStyleDefinition AdaptiveCards::ContainerStyleDefinition::Deserialize(const Json::Value & json, const ContainerStyleDefinition & defaultValue)
+ContainerStyleDefinition ContainerStyleDefinition::Deserialize(const Json::Value & json, const ContainerStyleDefinition & defaultValue)
 {
     ContainerStyleDefinition result;
 
-    std::string backgroundColor = ParseUtil::GetString(json, AdaptiveCardSchemaKey::BackgroundColor);
+    const std::string backgroundColor = ParseUtil::GetString(json, AdaptiveCardSchemaKey::BackgroundColor);
     result.backgroundColor = backgroundColor == "" ? defaultValue.backgroundColor : backgroundColor;
+
+    const std::string borderColor = ParseUtil::GetString(json, AdaptiveCardSchemaKey::BorderColor);
+    result.borderColor = borderColor == "" ? defaultValue.borderColor : borderColor;
+
+    result.borderThickness = ParseUtil::GetInt(json, AdaptiveCardSchemaKey::BorderThickness, defaultValue.borderThickness);
 
     result.foregroundColors = ParseUtil::ExtractJsonValueAndMergeWithDefault<ColorsConfig>(
         json, AdaptiveCardSchemaKey::ForegroundColors, defaultValue.foregroundColors, ColorsConfig::Deserialize);
@@ -261,7 +269,7 @@ ContainerStyleDefinition AdaptiveCards::ContainerStyleDefinition::Deserialize(co
     return result;
 }
 
-ContainerStylesDefinition AdaptiveCards::ContainerStylesDefinition::Deserialize(const Json::Value & json, const ContainerStylesDefinition & defaultValue)
+ContainerStylesDefinition ContainerStylesDefinition::Deserialize(const Json::Value & json, const ContainerStylesDefinition & defaultValue)
 {
     ContainerStylesDefinition result;
 
@@ -274,7 +282,7 @@ ContainerStylesDefinition AdaptiveCards::ContainerStylesDefinition::Deserialize(
     return result;
 }
 
-FontWeightsConfig AdaptiveCards::FontWeightsConfig::Deserialize(const Json::Value & json, const FontWeightsConfig & defaultValue)
+FontWeightsConfig FontWeightsConfig::Deserialize(const Json::Value & json, const FontWeightsConfig & defaultValue)
 {
     FontWeightsConfig result;
 
@@ -290,7 +298,7 @@ FontWeightsConfig AdaptiveCards::FontWeightsConfig::Deserialize(const Json::Valu
     return result;
 }
 
-ImageConfig AdaptiveCards::ImageConfig::Deserialize(const Json::Value & json, const ImageConfig & defaultValue)
+ImageConfig ImageConfig::Deserialize(const Json::Value & json, const ImageConfig & defaultValue)
 {
     ImageConfig result;
 

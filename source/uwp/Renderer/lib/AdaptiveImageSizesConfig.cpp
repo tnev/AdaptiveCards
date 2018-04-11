@@ -2,10 +2,9 @@
 #include "AdaptiveImageSizesConfig.h"
 
 using namespace Microsoft::WRL;
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     HRESULT AdaptiveImageSizesConfig::RuntimeClassInitialize() noexcept try
     {
         ImageSizesConfig imageSizesConfig;
@@ -61,5 +60,4 @@ namespace AdaptiveCards { namespace Uwp
         m_large = largeSize;
         return S_OK;
     }
-}
-}
+AdaptiveNamespaceEnd

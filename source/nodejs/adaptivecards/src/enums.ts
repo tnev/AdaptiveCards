@@ -24,11 +24,6 @@ export enum Spacing {
     Padding
 }
 
-export enum Padding {
-    None,
-    Default
-}
-
 export enum TextWeight {
     Lighter,
     Default,
@@ -37,6 +32,8 @@ export enum TextWeight {
 
 export enum TextColor {
     Default,
+    Dark,
+    Light,
     Accent,
     Good,
     Warning,
@@ -84,9 +81,22 @@ export enum BackgroundImageMode {
     Repeat
 }
 
-export enum ContainerStyle {
-    Default,
-    Emphasis
+/*
+    This should really be a string enum, e.g.
+    
+        export enum ContainerStyle {
+            Default = "default",
+            Emphasis = "emphasis"
+        }
+
+    However, some hosts do not use a version of TypeScript
+    recent enough to understand string enums. This is
+    a compatible construct that does not require using
+    a more recent version of TypeScript.
+*/
+export class ContainerStyle {
+    static readonly Default = "default";
+    static readonly Emphasis = "emphasis";
 }
 
 export enum ValidationError {
@@ -103,4 +113,10 @@ export enum ValidationError {
     UnknownActionType,
     UnknownElementType,
     UnsupportedCardVersion
+}
+
+export enum ContainerFitStatus {
+    FullyInContainer,
+    Overflowing,
+    FullyOutOfContainer
 }

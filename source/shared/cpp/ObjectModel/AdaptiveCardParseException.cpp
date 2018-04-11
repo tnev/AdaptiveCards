@@ -1,6 +1,7 @@
+#include "pch.h"
 #include "AdaptiveCardParseException.h"
 
-using namespace AdaptiveCards;
+using namespace AdaptiveSharedNamespace;
 
 AdaptiveCardParseException::AdaptiveCardParseException(const ErrorStatusCode statusCode, const std::string & message) : m_statusCode(statusCode), m_message(message)
 {
@@ -20,7 +21,7 @@ const ErrorStatusCode AdaptiveCardParseException::GetStatusCode() const
     return m_statusCode;
 }
 
-const std::string& AdaptiveCardParseException::GetMessage() const
+const std::string& AdaptiveCardParseException::GetReason() const
 {
     return m_message;
 }

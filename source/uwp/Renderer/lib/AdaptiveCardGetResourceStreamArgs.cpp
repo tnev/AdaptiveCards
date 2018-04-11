@@ -2,11 +2,10 @@
 #include "AdaptiveCardGetResourceStreamArgs.h"
 
 using namespace Microsoft::WRL;
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 using namespace ABI::Windows::Foundation;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     _Use_decl_annotations_
     HRESULT AdaptiveCardGetResourceStreamArgs::RuntimeClassInitialize(IUriRuntimeClass* url)
     {
@@ -21,4 +20,4 @@ namespace AdaptiveCards { namespace Uwp
         *url = localUrl.Detach();
         return S_OK;
     }
-}}
+AdaptiveNamespaceEnd

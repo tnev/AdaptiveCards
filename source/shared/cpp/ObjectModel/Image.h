@@ -6,8 +6,7 @@
 #include "Enums.h"
 #include "ElementParserRegistration.h"
 
-namespace AdaptiveCards
-{
+AdaptiveSharedNamespaceStart
 class Image : public BaseCardElement
 {
 public:
@@ -42,6 +41,8 @@ public:
     void SetSelectAction(const std::shared_ptr<BaseActionElement> action);
 
 private:
+    void PopulateKnownPropertiesSet();
+
     std::string m_url;
     ImageStyle m_imageStyle;
     ImageSize m_imageSize;
@@ -50,7 +51,7 @@ private:
     std::shared_ptr<BaseActionElement> m_selectAction;
 };
 
-class ImageParser : public IBaseCardElementParser
+class ImageParser : public BaseCardElementParser
 {
 public:
     std::shared_ptr<BaseCardElement> Deserialize(
@@ -68,4 +69,4 @@ public:
         std::shared_ptr<ActionParserRegistration> actionParserRegistration,
         const std::string& jsonString);
 };
-}
+AdaptiveSharedNamespaceEnd

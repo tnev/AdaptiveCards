@@ -5,13 +5,14 @@
 #include "AdaptiveElementParserRegistration.h"
 #include "AdaptiveCardParseException.h"
 #include "AdaptiveError.h"
+#include "AdaptiveWarning.h"
 
 #include <json.h>
 #include "Util.h"
 #include "Vector.h"
 #include <windows.foundation.collections.h>
 
-using namespace ABI::AdaptiveCards::Uwp;
+using namespace ABI::AdaptiveNamespace;
 using namespace ABI::Windows::Data::Json;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Foundation::Collections;
@@ -19,8 +20,7 @@ using namespace ABI::Windows::UI::Xaml;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-namespace AdaptiveCards { namespace Uwp
-{
+AdaptiveNamespaceStart
     _Use_decl_annotations_
     HRESULT AdaptiveCardStaticsImpl::FromJsonString(HSTRING adaptiveJson, IAdaptiveCardParseResult** parseResult) noexcept try
     {
@@ -90,71 +90,87 @@ namespace AdaptiveCards { namespace Uwp
             }
         }
 
-                ComPtr<AdaptiveCardParseResult> adaptiveParseResult;
-                RETURN_IF_FAILED(MakeAndInitialize<AdaptiveCardParseResult>(&adaptiveParseResult));
-                try
-                {
-                        std::shared_ptr<::AdaptiveCards::AdaptiveCard> sharedAdaptiveCard = ::AdaptiveCards::AdaptiveCard::DeserializeFromString(jsonString, sharedModelElementParserRegistration, sharedModelActionParserRegistration);
-                        ComPtr<IAdaptiveCard> adaptiveCard;
-                        RETURN_IF_FAILED(MakeAndInitialize<AdaptiveCard>(&adaptiveCard, sharedAdaptiveCard));
-                        RETURN_IF_FAILED(adaptiveParseResult->put_AdaptiveCard(adaptiveCard.Get()));
-                        return adaptiveParseResult.CopyTo(parseResult);
-                }
-                catch (const AdaptiveCardParseException& e)
-                {
-                        ComPtr<IVector<IAdaptiveError*>> errors;
-                        RETURN_IF_FAILED(adaptiveParseResult->get_Errors(&errors));
-                        HString errorMessage;
-                        ABI::AdaptiveCards::Uwp::ErrorStatusCode statusCode = static_cast<ABI::AdaptiveCards::Uwp::ErrorStatusCode>(e.GetStatusCode());
-                        RETURN_IF_FAILED(UTF8ToHString(e.GetMessage(), errorMessage.GetAddressOf()));
-                        ComPtr<IAdaptiveError> adaptiveError;
-                        RETURN_IF_FAILED(MakeAndInitialize<AdaptiveError>(&adaptiveError, statusCode, errorMessage.Get()));
-                        RETURN_IF_FAILED(errors->Append(adaptiveError.Get()));
-                        return adaptiveParseResult.CopyTo(parseResult);
-                }
+        ComPtr<AdaptiveCardParseResult> adaptiveParseResult;
+        RETURN_IF_FAILED(MakeAndInitialize<AdaptiveCardParseResult>(&adaptiveParseResult));
+        try
+        {
+            const double c_rendererVersion = 1.0;
+            std::shared_ptr<AdaptiveSharedNamespace::ParseResult> sharedParseResult = AdaptiveSharedNamespace::AdaptiveCard::DeserializeFromString(jsonString, c_rendererVersion, sharedModelElementParserRegistration, sharedModelActionParserRegistration);
+            ComPtr<IAdaptiveCard> adaptiveCard;
+            RETURN_IF_FAILED(MakeAndInitialize<AdaptiveCard>(&adaptiveCard, sharedParseResult->GetAdaptiveCard()));
+            RETURN_IF_FAILED(adaptiveParseResult->put_AdaptiveCard(adaptiveCard.Get()));
+
+            ComPtr<IVector<IAdaptiveWarning*>> warnings;
+            RETURN_IF_FAILED(adaptiveParseResult->get_Warnings(&warnings));
+
+            for (auto sharedWarning : sharedParseResult->GetWarnings())
+            {
+                HString warningMessage;
+                RETURN_IF_FAILED(UTF8ToHString(sharedWarning->GetReason(), warningMessage.GetAddressOf()));
+                            
+                ABI::AdaptiveNamespace::WarningStatusCode statusCode = static_cast<ABI::AdaptiveNamespace::WarningStatusCode>(sharedWarning->GetStatusCode());
+
+                ComPtr<IAdaptiveWarning> adaptiveWarning;
+                RETURN_IF_FAILED(MakeAndInitialize<AdaptiveWarning>(&adaptiveWarning, statusCode, warningMessage.Get()));
+
+                RETURN_IF_FAILED(warnings->Append(adaptiveWarning.Get()));
+            }
+
+            return adaptiveParseResult.CopyTo(parseResult);
+        }
+        catch (const AdaptiveCardParseException& e)
+        {
+            ComPtr<IVector<IAdaptiveError*>> errors;
+            RETURN_IF_FAILED(adaptiveParseResult->get_Errors(&errors));
+            HString errorMessage;
+            ABI::AdaptiveNamespace::ErrorStatusCode statusCode = static_cast<ABI::AdaptiveNamespace::ErrorStatusCode>(e.GetStatusCode());
+            RETURN_IF_FAILED(UTF8ToHString(e.GetReason(), errorMessage.GetAddressOf()));
+            ComPtr<IAdaptiveError> adaptiveError;
+            RETURN_IF_FAILED(MakeAndInitialize<AdaptiveError>(&adaptiveError, statusCode, errorMessage.Get()));
+            RETURN_IF_FAILED(errors->Append(adaptiveError.Get()));
+            return adaptiveParseResult.CopyTo(parseResult);
+        }
     }
 
     HRESULT AdaptiveCard::RuntimeClassInitialize()
     {
-        std::shared_ptr<AdaptiveCards::AdaptiveCard> adaptiveCard = std::make_shared<AdaptiveCards::AdaptiveCard>();
+        std::shared_ptr<AdaptiveSharedNamespace::AdaptiveCard> adaptiveCard = std::make_shared<AdaptiveSharedNamespace::AdaptiveCard>();
         return RuntimeClassInitialize(adaptiveCard);
     }
 
     _Use_decl_annotations_
-    HRESULT AdaptiveCard::RuntimeClassInitialize(std::shared_ptr<::AdaptiveCards::AdaptiveCard> sharedAdaptiveCard)
+        HRESULT AdaptiveCard::RuntimeClassInitialize(std::shared_ptr<AdaptiveSharedNamespace::AdaptiveCard> sharedAdaptiveCard)
     {
         m_body = Microsoft::WRL::Make<Vector<IAdaptiveCardElement*>>();
         if (m_body == nullptr)
         {
             return E_FAIL;
         }
-        
+
         m_actions = Microsoft::WRL::Make<Vector<IAdaptiveActionElement*>>();
         if (m_actions == nullptr)
         {
             return E_FAIL;
-        }        
+        }
 
         RETURN_IF_FAILED(GenerateContainedElementsProjection(sharedAdaptiveCard->GetBody(), m_body.Get()));
         RETURN_IF_FAILED(GenerateActionsProjection(sharedAdaptiveCard->GetActions(), m_actions.Get()));
 
         RETURN_IF_FAILED(UTF8ToHString(sharedAdaptiveCard->GetVersion(), m_version.GetAddressOf()));
-        RETURN_IF_FAILED(UTF8ToHString(sharedAdaptiveCard->GetMinVersion(), m_minVersion.GetAddressOf()));
         RETURN_IF_FAILED(UTF8ToHString(sharedAdaptiveCard->GetFallbackText(), m_fallbackText.GetAddressOf()));
         RETURN_IF_FAILED(UTF8ToHString(sharedAdaptiveCard->GetSpeak(), m_speak.GetAddressOf()));
 
-        m_style = static_cast<ABI::AdaptiveCards::Uwp::ContainerStyle>(sharedAdaptiveCard->GetStyle());
+        m_style = static_cast<ABI::AdaptiveNamespace::ContainerStyle>(sharedAdaptiveCard->GetStyle());
 
         ComPtr<IUriRuntimeClassFactory> uriActivationFactory;
         RETURN_IF_FAILED(GetActivationFactory(
             HStringReference(RuntimeClass_Windows_Foundation_Uri).Get(),
             &uriActivationFactory));
 
-        HSTRING imageUri;
-        RETURN_IF_FAILED(UTF8ToHString(sharedAdaptiveCard->GetBackgroundImage(), &imageUri));
-        if (imageUri != nullptr)
+        std::wstring imageUri = StringToWstring(sharedAdaptiveCard->GetBackgroundImage());
+        if (!imageUri.empty())
         {
-            RETURN_IF_FAILED(uriActivationFactory->CreateUri(imageUri, m_backgroundImage.GetAddressOf()));
+            RETURN_IF_FAILED(uriActivationFactory->CreateUri(HStringReference(imageUri.c_str()).Get(), m_backgroundImage.GetAddressOf()));
         }
 
         return S_OK;
@@ -170,18 +186,6 @@ namespace AdaptiveCards { namespace Uwp
     HRESULT AdaptiveCard::put_Version(HSTRING version)
     {
         return m_version.Set(version);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveCard::get_MinVersion(HSTRING* minVersion)
-    {
-        return m_minVersion.CopyTo(minVersion);
-    }
-
-    _Use_decl_annotations_
-    HRESULT AdaptiveCard::put_MinVersion(HSTRING minVersion)
-    {
-        return m_minVersion.Set(minVersion);
     }
 
     _Use_decl_annotations_
@@ -229,14 +233,14 @@ namespace AdaptiveCards { namespace Uwp
     } CATCH_RETURN;
 
     _Use_decl_annotations_
-    HRESULT AdaptiveCard::get_Style(ABI::AdaptiveCards::Uwp::ContainerStyle* style)
+    HRESULT AdaptiveCard::get_Style(ABI::AdaptiveNamespace::ContainerStyle* style)
     {
         *style = m_style;
         return S_OK;
     }
 
     _Use_decl_annotations_
-    HRESULT AdaptiveCard::put_Style(ABI::AdaptiveCards::Uwp::ContainerStyle style)
+    HRESULT AdaptiveCard::put_Style(ABI::AdaptiveNamespace::ContainerStyle style)
     {
         m_style = style;
         return S_OK;
@@ -257,19 +261,17 @@ namespace AdaptiveCards { namespace Uwp
     _Use_decl_annotations_
     HRESULT AdaptiveCard::ToJson(IJsonObject** result)
     {
-        std::shared_ptr<AdaptiveCards::AdaptiveCard> sharedModel;
+        std::shared_ptr<AdaptiveSharedNamespace::AdaptiveCard> sharedModel;
         RETURN_IF_FAILED(GetSharedModel(sharedModel));
 
         return StringToJsonObject(sharedModel->Serialize(), result);
     }
 
-    _Use_decl_annotations_
-    HRESULT AdaptiveCard::GetSharedModel(std::shared_ptr<AdaptiveCards::AdaptiveCard>& sharedModel)
+    HRESULT AdaptiveCard::GetSharedModel(std::shared_ptr<AdaptiveSharedNamespace::AdaptiveCard>& sharedModel)
     {
-        std::shared_ptr<AdaptiveCards::AdaptiveCard> adaptiveCard = std::make_shared<AdaptiveCards::AdaptiveCard>();
+        std::shared_ptr<AdaptiveSharedNamespace::AdaptiveCard> adaptiveCard = std::make_shared<AdaptiveSharedNamespace::AdaptiveCard>();
 
         adaptiveCard->SetVersion(HStringToUTF8(m_version.Get()));
-        adaptiveCard->SetMinVersion(HStringToUTF8(m_minVersion.Get()));
         adaptiveCard->SetFallbackText(HStringToUTF8(m_fallbackText.Get()));
         adaptiveCard->SetSpeak(HStringToUTF8(m_speak.Get()));
 
@@ -282,7 +284,7 @@ namespace AdaptiveCards { namespace Uwp
             adaptiveCard->SetBackgroundImage(urlString);
         }
 
-        adaptiveCard->SetStyle(static_cast<AdaptiveCards::ContainerStyle>(m_style));
+        adaptiveCard->SetStyle(static_cast<AdaptiveSharedNamespace::ContainerStyle>(m_style));
 
         GenerateSharedElements(m_body.Get(), adaptiveCard->GetBody());
         GenerateSharedActions(m_actions.Get(), adaptiveCard->GetActions());
@@ -290,4 +292,4 @@ namespace AdaptiveCards { namespace Uwp
         sharedModel = adaptiveCard;
         return S_OK;
     }
-}}
+AdaptiveNamespaceEnd
