@@ -146,7 +146,7 @@ using namespace AdaptiveCards;
 - (void)addTasksToConcurrentQueue:(std::vector<std::shared_ptr<BaseCardElement>> const &)body
 {
     ACRRegistration *rendererRegistration = [ACRRegistration getInstance];
-    
+
     for(auto &elem : body)
     {
         if([rendererRegistration isElementRendererOverriden:(ACRCardElementType) elem->GetElementType()] == YES){
@@ -257,21 +257,6 @@ using namespace AdaptiveCards;
                 /// no work is needed
                 break;
             }
-        }
-    }
-}
-
-// Walk through the actions found and process them concurrently
-- (void)addActionsToConcurrentQueue:(std::vector<std::shared_ptr<BaseActionElement>> const &)actions
-{
-    // Move this to a different function
-    for(auto &action : actions)
-    {
-        std::string iconUrl = action->GetIconUrl();
-        if(!iconUrl.empty())
-        {
-            [self tagBaseActionElement:action];
-            [self processActionWithIconConcurrently:action];
         }
     }
 }
@@ -442,62 +427,6 @@ using namespace AdaptiveCards;
     );
 }
 
-- (void)processActionWithIconConcurrently:(std::shared_ptr<BaseActionElement> const &)action
-{
-    [self addToAsyncRenderingList];
-
-    std::shared_ptr<BaseActionElement> act = action;
-
-    /// generate a string key to uniquely identify Image
-    if(!(act->GetIconUrl().empty()))
-    {
-        // run image downloading and processing on global queue which is concurrent and different from main queue
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
-            ^{
-                NSString *urlStr = [NSString stringWithCString:act->GetIconUrl().c_str() encoding:[NSString defaultCStringEncoding]];
-                // generate key for imageMap from image element's id
-                NSString *key = [NSString stringWithCString:act->GetId().c_str() encoding:[NSString defaultCStringEncoding]];
-                NSURL *url = [NSURL URLWithString:urlStr];
-
-                // download image
-                UIImage *img = [UIImage imageWithData:[NSData dataWithContentsOfURL:url]];
-                UIImageView *imageView = [[UIImageView alloc] initWithImage:img];
-
-                // UITask can't be run on global queue, add task to main queue
-                dispatch_async(dispatch_get_main_queue(),
-                    ^{
-                        __block UIButton *button = nil;
-                        // synchronize access to image map
-                        dispatch_sync(self->_serial_queue,
-                            ^{
-                                if(!self->_actionsMap[key]) // UIButton is not ready, cache UIImageView
-                                {
-                                    self->_actionsMap[key] = imageView;
-                                }
-                                else // UIButton ready, get view
-                                {
-                                    button = self->_actionsMap[key];
-                                }
-                            });
-
-                        // if view is available, set image to it, and continue image processing
-                        if(button)
-                        {
-                            [ACRView setImageView:imageView inButton:button withConfig:self->_hostConfig];
-
-                            // remove tag
-                            std::string id = act->GetId();
-                            std::size_t idx = id.find_last_of('_');
-                            act->SetId(id.substr(0, idx));
-                        }
-
-                        [self removeFromAsyncRenderingListAndNotifyIfNeeded];
-                    });
-                }
-            );
-    }
-}
-
 // add postfix to existing BaseCardElement ID to be used as key
 -(void)tagBaseCardElement:(std::shared_ptr<BaseCardElement> const &)elem
 {
@@ -531,29 +460,4 @@ using namespace AdaptiveCards;
     return _adaptiveCard;
 }
 
-+ (void)setImageView:(UIImageView*)imageView inButton:(UIButton*)button withConfig:(ACOHostConfig *)config
-{
-    // Format the image so it fits in the button and is placed where it must be placed
-    CGSize contentSize = [button.titleLabel intrinsicContentSize];
-    double imageHeight = contentSize.height;
-    CGSize originalImageSize = [imageView intrinsicContentSize];
-    double scaleRatio = imageHeight / originalImageSize.height;
-    double imageWidth = scaleRatio * originalImageSize.width;
-
-    IconPlacement iconPlacement = [config getHostConfig]->actions.iconPlacement;
-    if(iconPlacement == AdaptiveCards::IconPlacement::AboveTitle)
-    {
-        [imageView setFrame:CGRectMake( (button.frame.size.width - imageWidth) / 2, 5, imageWidth, imageHeight)];
-        [button setTitleEdgeInsets:UIEdgeInsetsMake(imageHeight, 5, -imageHeight, 5)];
-        [button setContentEdgeInsets:UIEdgeInsetsMake(5, 5, 5 + imageHeight, 5)];
-    }
-    else
-    {
-        int iconPadding = [config getHostConfig]->spacing.defaultSpacing;
-        [button setTitleEdgeInsets:UIEdgeInsetsMake(5, (iconPadding + imageWidth), 5, 0)];
-        double titleOriginX = button.titleLabel.frame.origin.x;
-        [imageView setFrame:CGRectMake( titleOriginX - (iconPadding + imageWidth) / 2, 5, imageWidth, imageHeight)];
-    }
-    [button addSubview:imageView];
-}
 @end
