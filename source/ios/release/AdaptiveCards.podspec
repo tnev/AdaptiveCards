@@ -33,7 +33,7 @@ Pod::Spec.new do |spec|
   
   spec.summary          = 'Adaptive Cards are a new way for developers to exchange card content in a common and consistent way'
   
-  spec.source           = { :http => 'https://github.com/Microsoft/AdaptiveCards/releases/download/ios-v1.0.3/AdaptiveCards.framework.zip' }
+  spec.source           = { :http => 'https://github.com/tnev/AdaptiveCards/releases/download/ios-v1.0.3/AdaptiveCards.framework.zip' }
  
   spec.vendored_frameworks = 'AdaptiveCards.framework'
   
